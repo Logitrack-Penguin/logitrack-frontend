@@ -1,0 +1,12 @@
+# Lo que NO se envia a Docker al construir (build mas rapido y sin secretos)
+node_modules
+dist
+.git
+.github
+.claude
+.idea
+.vscode
+*.log
+.env
+.env.*
+!.env.example
