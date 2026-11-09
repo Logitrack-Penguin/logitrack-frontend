@@ -1,87 +1,43 @@
-# Welcome to React Router!
+# logitrack-frontend
 
-A modern, production-ready template for building full-stack React applications using React Router.
+SPA de LogiTrack: React + TypeScript + Vite, React Router (modo data) y axios.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## Requisitos
 
-## Features
+- Node 24 o superior
+- El `api-gateway` corriendo (por defecto en `http://localhost:8066`)
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
-
-## Getting Started
-
-### Installation
-
-Install the dependencies:
+## Puesta en marcha
 
 ```bash
-npm install
+cp .env.example .env   # ajustar VITE_API_BASE_URL si hace falta
+npm ci
+npm run dev            # http://localhost:5173
 ```
 
-### Development
+## Scripts
 
-Start the development server with HMR:
+| Script                 | Qué hace                                  |
+| ---------------------- | ----------------------------------------- |
+| `npm run dev`          | Servidor de desarrollo (puerto 5173 fijo) |
+| `npm run build`        | Chequeo de tipos + build de producción    |
+| `npm run typecheck`    | Solo chequeo de tipos (`tsc -b`)          |
+| `npm run lint`         | Linter (oxlint)                           |
+| `npm run format`       | Formatea con Prettier                     |
+| `npm run format:check` | Verifica el formato (lo usa el CI)        |
+| `npm test`             | Tests con Vitest (una corrida)            |
+| `npm run test:watch`   | Tests en modo watch                       |
 
-```bash
-npm run dev
-```
-
-Your application will be available at `http://localhost:5173`.
-
-## Building for Production
-
-Create a production build:
-
-```bash
-npm run build
-```
-
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
+## Estructura
 
 ```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
+src/
+  app/          router.tsx y navigation.ts (componen las rutas y el menú de cada feature)
+  config/       env.ts: único lugar que lee variables de entorno
+  features/     una carpeta por feature, cada una con routes.tsx y nav.ts
+  pages/        páginas globales (NotFoundPage, SinPermisoPage)
+  shared/       api, auth, guards, components y ui compartidos
+  test/         setup de Vitest
 ```
 
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+Las convenciones y los contratos entre features están en `docs/CONTRATOS.md`.

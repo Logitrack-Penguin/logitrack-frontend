@@ -1,10 +1,14 @@
-import { reactRouter } from "@react-router/dev/vite";
-import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vite";
+/// <reference types="vitest/config" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  plugins: [tailwindcss(), reactRouter()],
-  resolve: {
-    tsconfigPaths: true,
+  plugins: [react()],
+  server: { port: 5173, strictPort: true }, // el origen de desarrollo que permite CORS
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    globals: true,
+    passWithNoTests: true,
   },
 });
