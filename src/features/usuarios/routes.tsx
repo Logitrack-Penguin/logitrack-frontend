@@ -1,5 +1,6 @@
 // src/features/usuarios/routes.tsx (LT4-33)
 import type { RouteObject } from 'react-router';
+import { RequireRole } from '../../shared/guards/RequireRole';
 import { PerfilPage } from './pages/PerfilPage';
 import { RegistroPage } from './pages/RegistroPage';
 import { UsuarioCreatePage } from './pages/UsuarioCreatePage';
@@ -12,9 +13,8 @@ export const usuariosPublicRoutes: RouteObject[] = [
 export const usuariosRoutes: RouteObject[] = [
   { path: '/perfil', element: <PerfilPage /> }, // cualquier usuario logueado
   {
-    // Solo ADMIN (permiso 'usuarios.gestionar').
-    // PENDIENTE LT4-03: agregar element: <RequireRole permiso="usuarios.gestionar" /> cuando
-    // Agus publique RequireRole. Mientras tanto, el gateway igual responde 403 a los demás roles.
+    // Solo ADMIN. Sin el permiso, RequireRole lleva a /sin-permiso sin llamar al backend.
+    element: <RequireRole permiso="usuarios.gestionar" />,
     children: [
       { path: '/usuarios', element: <UsuarioListPage /> },
       { path: '/usuarios/nuevo', element: <UsuarioCreatePage /> },
