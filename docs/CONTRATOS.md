@@ -54,7 +54,9 @@ export const SECURITY: string;
 export const SHIPMENT: string;
 export const COURIER: string;
 
-// shared/auth
+// shared/auth/permissions.ts → Rol, PERMISOS, Permiso
+// shared/auth/sessionStore.ts → Sesion
+// shared/auth/useAuth.ts → useAuth
 export type Rol = 'ADMIN' | 'CLIENTE' | 'REPARTIDOR';
 export interface Sesion {
   token: string;
@@ -126,11 +128,28 @@ export const PERMISOS = {
 Si una feature necesita un permiso nuevo, se agrega con un PR a `permissions.ts` y a esta tabla.
 
 ```tsx
-// shared/guards
+// shared/guards/RequireAuth.tsx, RequireRole.tsx, Can.tsx
 <RequireAuth />                                // ruta "padre" que exige sesión
 <RequireRole permiso="clientes.gestionar" />
 <Can permiso="envios.cancelar">…</Can>
 ```
+
+**Ejemplo en el `routes.tsx` de una feature** (las rutas ya están dentro de `RequireAuth`):
+
+```tsx
+import type { RouteObject } from 'react-router';
+import { RequireRole } from '../../shared/guards/RequireRole';
+
+export const clientesRoutes: RouteObject[] = [
+  {
+    element: <RequireRole permiso="clientes.gestionar" />,
+    children: [{ path: '/clientes', element: <ClienteListPage /> }],
+  },
+];
+```
+
+Si el usuario entra a mano a una ruta sin permiso, `RequireRole` lo manda a `/sin-permiso` sin
+cerrar la sesión. Si el backend responde 403, `httpClient` sí la cierra.
 
 ```ts
 // convención de rutas y menú por feature

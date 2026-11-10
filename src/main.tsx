@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
 import { router } from './app/router';
 import { setSesionInvalidaHandler } from './shared/api/httpClient';
+import { AuthProvider } from './shared/auth/AuthProvider';
 import { sessionStore } from './shared/auth/sessionStore';
 import { ToastProvider } from './shared/notifications/ToastProvider';
 import './index.css';
@@ -21,7 +22,9 @@ setSesionInvalidaHandler((status) => {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ToastProvider>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </ToastProvider>
   </StrictMode>,
 );
