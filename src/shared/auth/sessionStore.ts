@@ -1,56 +1,81 @@
+import { decodeJwt, estaVencido } from './jwt';
 import type { Rol } from './permissions';
 
 export interface Sesion {
   token: string;
-  userId: string;
-  username: string;
-  roles: Rol[];
-  exp: number; // claim "exp" del JWT, en segundos
+  userId: string; // claim "userId"
+  username: string; // claim "sub"
+  roles: Rol[]; // claim "roles"
+  exp: number; // claim "exp", en segundos
 }
 
-const CLAVE = 'logitrack.sesion';
+// Se guarda solo el token: la sesión se deriva de sus claims.
+const KEY = 'logitrack.session';
 
-// Copia en memoria; sessionStorage permite recuperarla al recargar la pestaña.
-let enMemoria: Sesion | null = null;
+function desdeToken(token: string): Sesion | null {
+  const c = decodeJwt(token);
+  const esValido =
+    c !== null &&
+    typeof c.sub === 'string' &&
+    typeof c.userId === 'string' &&
+    Array.isArray(c.roles) &&
+    typeof c.exp === 'number';
+  if (!esValido || estaVencido(c)) return null;
+  return { token, userId: c.userId, username: c.sub, roles: c.roles, exp: c.exp };
+}
 
-const estaVencida = (sesion: Sesion): boolean => sesion.exp * 1000 <= Date.now();
-
-function leerDeStorage(): Sesion | null {
+function leer(): Sesion | null {
   try {
-    const guardada = sessionStorage.getItem(CLAVE);
-    return guardada ? (JSON.parse(guardada) as Sesion) : null;
+    const token = sessionStorage.getItem(KEY);
+    const sesion = token ? desdeToken(token) : null;
+    if (token && !sesion) sessionStorage.removeItem(KEY); // vencido o corrupto: se descarta
+    return sesion;
   } catch {
-    return null;
+    return null; // sessionStorage bloqueado (modo privado)
   }
 }
 
-// Único lugar que lee y escribe la sesión. Las pantallas usan useAuth(), no este módulo.
-export const sessionStore = {
-  get(): Sesion | null {
-    const sesion = enMemoria ?? leerDeStorage();
-    if (!sesion || estaVencida(sesion)) {
-      if (sesion) sessionStore.clear();
-      return null;
-    }
-    enMemoria = sesion;
-    return sesion;
-  },
+let actual: Sesion | null = leer();
+const oyentes = new Set<() => void>();
 
-  set(sesion: Sesion): void {
-    enMemoria = sesion;
-    try {
-      sessionStorage.setItem(CLAVE, JSON.stringify(sesion));
-    } catch {
-      // Sin acceso a sessionStorage (modo privado, cuota): queda solo en memoria.
+function emitir(): void {
+  oyentes.forEach((fn) => fn());
+}
+
+// La sesión vive fuera de React para que httpClient pueda leerla.
+// Las pantallas no la usan directo: usan useAuth().
+export const sessionStore = {
+  get: (): Sesion | null => actual,
+
+  set(token: string): void {
+    const sesion = desdeToken(token);
+    if (!sesion) {
+      sessionStore.clear();
+      return;
     }
+    try {
+      sessionStorage.setItem(KEY, token);
+    } catch {
+      // sessionStorage bloqueado: la sesión queda solo en memoria.
+    }
+    actual = sesion;
+    emitir();
   },
 
   clear(): void {
-    enMemoria = null;
     try {
-      sessionStorage.removeItem(CLAVE);
+      sessionStorage.removeItem(KEY);
     } catch {
-      // Nada que limpiar.
+      // sessionStorage bloqueado: no hay nada que borrar.
     }
+    actual = null;
+    emitir();
+  },
+
+  subscribe(fn: () => void): () => void {
+    oyentes.add(fn);
+    return () => {
+      oyentes.delete(fn);
+    };
   },
 };
