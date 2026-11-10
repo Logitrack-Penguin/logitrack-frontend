@@ -1,0 +1,100 @@
+/* Estilos comunes de las páginas de envíos (listado, detalle y seguimiento). */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--font-size-xl);
+}
+
+.filtro {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.filtro label {
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.select {
+  font: inherit;
+  padding: var(--space-2) var(--space-3);
+}
+
+.secciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-5);
+}
+
+.subtitulo {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-lg);
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-3) var(--space-5);
+  margin: 0;
+}
+
+.datos dt {
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.datos dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.historial {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.historial li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.fecha {
+  color: var(--color-text-muted);
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 520px;
+}
+
+.input {
+  font: inherit;
+  padding: var(--space-2) var(--space-3);
+}
+
+.mensaje {
+  margin: 0;
+  color: var(--color-text-muted);
+}
