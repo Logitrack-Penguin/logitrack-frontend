@@ -38,13 +38,18 @@ Claude al empezar su issue.
 Es lo que las demás features importan.
 
 ```ts
-// shared/api
+// shared/api/httpClient.ts
 export const httpClient: AxiosInstance;
+
+// shared/api/apiError.ts
 export class ApiError extends Error {
-  status: number;
+  status: number; // 0 = sin respuesta del servidor
   fieldErrors?: Record<string, string>;
   raw?: unknown;
 }
+export function toApiError(error: unknown): ApiError;
+
+// shared/api/servicePaths.ts
 export const SECURITY: string;
 export const SHIPMENT: string;
 export const COURIER: string;
@@ -66,6 +71,21 @@ export function useAuth(): {
 };
 export type Permiso = keyof typeof PERMISOS;
 ```
+
+**Uso de errores en las pantallas.** `httpClient` siempre rechaza con un `ApiError`, pero en
+TypeScript el `catch` recibe `unknown`. Usá `toApiError` para tiparlo:
+
+```ts
+try {
+  await enviosApi.cancelar(id);
+} catch (e) {
+  const error = toApiError(e);
+  toast.error(error.message); // formularios: error.fieldErrors
+}
+```
+
+Un 401 o 403 (salvo en login y registro) ya cierra la sesión y lleva a `/login` desde `httpClient`:
+las pantallas no tienen que manejarlo.
 
 ### Permisos (`shared/auth/permissions.ts`)
 
