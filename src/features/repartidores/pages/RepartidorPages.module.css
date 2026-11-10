@@ -1,0 +1,60 @@
+/* Estilos comunes de las pantallas de repartidores. */
+.encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.encabezado h1 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+}
+
+.filtros {
+  margin-bottom: var(--space-4);
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+
+.datos dt {
+  color: var(--color-text-muted);
+}
+
+.datos dd {
+  margin: 0;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.disponibilidad {
+  font-weight: 600;
+}
+
+/* Alta y edición: columna angosta y centrada. */
+.paginaFormulario {
+  max-width: 36rem;
+  margin-inline: auto;
+  text-align: start;
+}
+
+.formulario {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.volver {
+  margin-bottom: var(--space-3);
+}
