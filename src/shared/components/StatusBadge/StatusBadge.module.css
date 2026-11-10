@@ -1,0 +1,68 @@
+.badge {
+  --badge-text: var(--estado-inactivo);
+  --badge-bg: var(--estado-inactivo-bg);
+  --badge-dot: var(--estado-inactivo-dot);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* El punto de color delante del texto, como en el prototipo */
+.badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: var(--badge-dot);
+  flex-shrink: 0;
+}
+
+.pendiente {
+  --badge-text: var(--estado-pendiente);
+  --badge-bg: var(--estado-pendiente-bg);
+  --badge-dot: var(--estado-pendiente-dot);
+}
+
+.asignado {
+  --badge-text: var(--estado-asignado);
+  --badge-bg: var(--estado-asignado-bg);
+  --badge-dot: var(--estado-asignado-dot);
+}
+
+.enRuta {
+  --badge-text: var(--estado-en-ruta);
+  --badge-bg: var(--estado-en-ruta-bg);
+  --badge-dot: var(--estado-en-ruta-dot);
+}
+
+.entregado {
+  --badge-text: var(--estado-entregado);
+  --badge-bg: var(--estado-entregado-bg);
+  --badge-dot: var(--estado-entregado-dot);
+}
+
+.cancelado {
+  --badge-text: var(--estado-cancelado);
+  --badge-bg: var(--estado-cancelado-bg);
+  --badge-dot: var(--estado-cancelado-dot);
+}
+
+.activo {
+  --badge-text: var(--estado-activo);
+  --badge-bg: var(--estado-activo-bg);
+  --badge-dot: var(--estado-activo-dot);
+}
+
+.inactivo,
+.desconocido {
+  --badge-text: var(--estado-inactivo);
+  --badge-bg: var(--estado-inactivo-bg);
+  --badge-dot: var(--estado-inactivo-dot);
+}

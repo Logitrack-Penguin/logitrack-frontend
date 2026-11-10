@@ -1,0 +1,44 @@
+.contenedor {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 240px;
+}
+
+.lupa {
+  position: absolute;
+  left: 14px;
+  display: inline-flex;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.input {
+  padding-left: 42px;
+  padding-right: 42px;
+  border-radius: var(--radius-md);
+}
+
+/* Oculta la × nativa del navegador: usamos la nuestra */
+.input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.limpiar {
+  position: absolute;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.limpiar:hover {
+  background: var(--color-accent-soft);
+}
