@@ -1,16 +1,11 @@
 import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
-import { sessionStore, type Sesion } from '../auth/sessionStore';
+import { crearToken } from '../../test/jwt';
+import { sessionStore } from '../auth/sessionStore';
 import { ApiError } from './apiError';
 import { httpClient, setSesionInvalidaHandler } from './httpClient';
 import { SECURITY, SHIPMENT } from './servicePaths';
 
-const SESION: Sesion = {
-  token: 'token-de-prueba',
-  userId: '6f1c2a8e-0000-0000-0000-000000000000',
-  username: 'agus',
-  roles: ['ADMIN'],
-  exp: Math.floor(Date.now() / 1000) + 3600,
-};
+const TOKEN = crearToken();
 
 function respuesta(
   config: InternalAxiosRequestConfig,
@@ -50,9 +45,9 @@ describe('interceptor de pedido', () => {
   });
 
   it('con sesión agrega el Bearer', async () => {
-    sessionStore.set(SESION);
+    sessionStore.set(TOKEN);
     await httpClient.get(`${SHIPMENT}/envios`);
-    expect(authorization).toBe('Bearer token-de-prueba');
+    expect(authorization).toBe(`Bearer ${TOKEN}`);
   });
 
   it('sin sesión no agrega Authorization', async () => {

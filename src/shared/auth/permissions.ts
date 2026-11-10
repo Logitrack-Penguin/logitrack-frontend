@@ -1,8 +1,10 @@
+// IMPORTANTE: esta matriz debe coincidir EXACTAMENTE con las reglas de roles de
+// config-ms/api-gateway-dev.yaml (logitrack.gateway.security.rules). Si cambia una, cambia la otra.
+// Cada permiso se nombra <módulo>.<acción>. Solo sirve para mostrar u ocultar UI:
+// la validación real la hace el gateway. Ver docs/CONTRATOS.md.
+
 export type Rol = 'ADMIN' | 'CLIENTE' | 'REPARTIDOR';
 
-// Qué roles tiene cada permiso. Replica las reglas de roles del api-gateway
-// (config-ms/api-gateway-dev.yaml). Solo sirve para mostrar u ocultar UI:
-// la validación real la hace el gateway. Ver docs/CONTRATOS.md.
 export const PERMISOS = {
   'envios.ver': ['ADMIN', 'CLIENTE', 'REPARTIDOR'],
   'envios.crear': ['ADMIN', 'CLIENTE'],

@@ -1,14 +1,8 @@
-import { sessionStore, type Sesion } from './sessionStore';
+import { crearToken } from '../../test/jwt';
+import { sessionStore } from './sessionStore';
 
-const ahoraEnSegundos = () => Math.floor(Date.now() / 1000);
-
-const SESION: Sesion = {
-  token: 'abc',
-  userId: '6f1c2a8e-0000-0000-0000-000000000000',
-  username: 'agus',
-  roles: ['CLIENTE'],
-  exp: ahoraEnSegundos() + 3600,
-};
+const KEY = 'logitrack.session';
+const ahora = () => Math.floor(Date.now() / 1000);
 
 beforeEach(() => {
   sessionStore.clear();
@@ -16,32 +10,62 @@ beforeEach(() => {
 });
 
 describe('sessionStore', () => {
-  it('guarda la sesión en memoria y en sessionStorage', () => {
-    sessionStore.set(SESION);
-    expect(sessionStore.get()).toEqual(SESION);
-    expect(JSON.parse(sessionStorage.getItem('logitrack.sesion') ?? 'null')).toEqual(SESION);
+  it('set guarda el token y deriva la sesión de sus claims', () => {
+    const token = crearToken({ sub: 'luci', userId: 'u-2', roles: ['CLIENTE'] });
+    sessionStore.set(token);
+    expect(sessionStore.get()).toMatchObject({
+      token,
+      userId: 'u-2',
+      username: 'luci',
+      roles: ['CLIENTE'],
+    });
+    expect(sessionStorage.getItem(KEY)).toBe(token);
   });
 
-  it('recupera la sesión de sessionStorage (recarga de la pestaña)', () => {
-    sessionStorage.setItem('logitrack.sesion', JSON.stringify(SESION));
-    expect(sessionStore.get()).toEqual(SESION);
-  });
-
-  it('clear borra la sesión', () => {
-    sessionStore.set(SESION);
+  it('clear borra la sesión y avisa a los suscriptores', () => {
+    const oyente = vi.fn();
+    const desuscribir = sessionStore.subscribe(oyente);
+    sessionStore.set(crearToken());
     sessionStore.clear();
     expect(sessionStore.get()).toBeNull();
-    expect(sessionStorage.getItem('logitrack.sesion')).toBeNull();
+    expect(sessionStorage.getItem(KEY)).toBeNull();
+    expect(oyente).toHaveBeenCalledTimes(2);
+    desuscribir();
   });
 
-  it('una sesión vencida devuelve null y se borra', () => {
-    sessionStore.set({ ...SESION, exp: ahoraEnSegundos() - 1 });
+  it('no guarda un token vencido ni uno inválido', () => {
+    sessionStore.set(crearToken({ exp: ahora() - 1 }));
     expect(sessionStore.get()).toBeNull();
-    expect(sessionStorage.getItem('logitrack.sesion')).toBeNull();
+    sessionStore.set('token-corrupto');
+    expect(sessionStore.get()).toBeNull();
+    expect(sessionStorage.getItem(KEY)).toBeNull();
+  });
+});
+
+describe('sessionStore al iniciar (recarga de la página)', () => {
+  afterEach(() => {
+    vi.resetModules();
   });
 
-  it('un JSON inválido en sessionStorage devuelve null', () => {
-    sessionStorage.setItem('logitrack.sesion', '{no es json');
-    expect(sessionStore.get()).toBeNull();
+  it('recupera la sesión si el token no venció', async () => {
+    sessionStorage.setItem(KEY, crearToken({ sub: 'dani' }));
+    vi.resetModules();
+    const { sessionStore: recargado } = await import('./sessionStore');
+    expect(recargado.get()?.username).toBe('dani');
+  });
+
+  it('descarta un token vencido guardado', async () => {
+    sessionStorage.setItem(KEY, crearToken({ exp: ahora() - 1 }));
+    vi.resetModules();
+    const { sessionStore: recargado } = await import('./sessionStore');
+    expect(recargado.get()).toBeNull();
+    expect(sessionStorage.getItem(KEY)).toBeNull();
+  });
+
+  it('descarta un token corrupto guardado', async () => {
+    sessionStorage.setItem(KEY, 'basura');
+    vi.resetModules();
+    const { sessionStore: recargado } = await import('./sessionStore');
+    expect(recargado.get()).toBeNull();
   });
 });
