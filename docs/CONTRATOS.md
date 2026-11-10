@@ -189,9 +189,44 @@ _Pendiente._
 
 ### 4.4 Usuarios (Elías)
 
-<!-- Elías: completar. -->
+Archivo: `src/features/usuarios/types.ts`. Copiados de `security-service/.../dto/RegistroRequest.java`
+y `UserResponse.java`.
 
-_Pendiente._
+```ts
+// POST /applications/apisecurity/api/auth/register
+// Sin token solo crea CLIENTE (no mandar roles). Con token de ADMIN acepta cualquier rol.
+export interface RegistroRequest {
+  username: string; // 3 a 50 caracteres
+  password: string; // 8 a 72 caracteres (BCrypt solo usa 72 bytes)
+  email: string; // formato email, hasta 100 caracteres
+  roles?: Rol[]; // si no se manda, el backend asigna CLIENTE
+}
+
+// Respuesta de POST /auth/register (201), GET /auth/me y GET /users (solo ADMIN)
+export interface UserResponse {
+  id: string; // UUID
+  username: string;
+  email: string;
+  roles: Rol[]; // en Java es un Set: el orden no está garantizado
+}
+```
+
+```ts
+// src/features/usuarios/api/usuariosApi.ts
+usuariosApi.registrar(dto: RegistroRequest): Promise<UserResponse>;
+usuariosApi.me(): Promise<UserResponse>;
+usuariosApi.listar(): Promise<UserResponse[]>;
+```
+
+| Código | Cuándo                                                                |
+| ------ | --------------------------------------------------------------------- |
+| 400    | Datos inválidos. `message` trae `"campo: motivo; …"` (sin `detalles`) |
+| 403    | Pedir un rol privilegiado sin token de ADMIN                          |
+| 409    | Username o email ya existentes                                        |
+
+Rutas: `/registro` (pública), `/perfil` (cualquier usuario logueado), `/usuarios` y `/usuarios/nuevo`
+(permiso `usuarios.gestionar`). Después de registrarse, `/registro` navega a `/login` con
+`state: { username }`, para que el login pueda precompletar el usuario si quiere.
 
 ---
 

@@ -1,0 +1,41 @@
+/* Estilos comunes de las páginas privadas de usuarios (listado, alta y perfil). */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--font-size-xl);
+}
+
+.formulario {
+  width: 100%;
+  max-width: 520px;
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-3) var(--space-5);
+  margin: 0;
+}
+
+.datos dt {
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.datos dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
