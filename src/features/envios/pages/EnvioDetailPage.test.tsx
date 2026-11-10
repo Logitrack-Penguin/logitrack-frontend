@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { ApiError } from '../../../shared/api/apiError';
 import { sessionStore } from '../../../shared/auth/sessionStore';
@@ -94,5 +95,29 @@ describe('EnvioDetailPage', () => {
 
     expect(await screen.findByText('No se pudo cargar el historial.')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Envío LT-0001' })).toBeInTheDocument();
+  });
+
+  it('después de una acción vuelve a pedir el envío y el historial', async () => {
+    // jsdom no implementa showModal del <dialog>.
+    HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+      this.setAttribute('open', '');
+    };
+    iniciarSesionComo('ADMIN');
+    const obtener = vi
+      .spyOn(enviosApi, 'obtener')
+      .mockResolvedValueOnce(envioDePrueba())
+      .mockResolvedValueOnce(envioDePrueba({ estadoEnvio: 'CANCELADO' }));
+    const historial = vi.spyOn(enviosApi, 'historial').mockResolvedValue([]);
+    vi.spyOn(enviosApi, 'cancelar').mockResolvedValue(envioDePrueba({ estadoEnvio: 'CANCELADO' }));
+    const user = userEvent.setup();
+    renderizar();
+
+    await user.click(await screen.findByRole('button', { name: 'Cancelar envío' }));
+    await user.click(screen.getByRole('button', { name: 'Sí, cancelar envío' }));
+
+    expect(await screen.findByText('Cancelado')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cancelar envío' })).not.toBeInTheDocument();
+    expect(obtener).toHaveBeenCalledTimes(2);
+    expect(historial).toHaveBeenCalledTimes(2);
   });
 });

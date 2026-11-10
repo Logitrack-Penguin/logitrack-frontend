@@ -5,6 +5,7 @@ import { useAuth } from '../../../shared/auth/useAuth';
 import { Card, EmptyState, Spinner, StatusBadge } from '../../../shared/components';
 import { useToast } from '../../../shared/notifications/useToast';
 import { enviosApi } from '../api/enviosApi';
+import { EnvioAcciones } from '../components/EnvioAcciones';
 import {
   formatearDireccion,
   formatearFecha,
@@ -24,6 +25,9 @@ export function EnvioDetailPage() {
   const { sesion } = useAuth();
   const [envio, setEnvio] = useState<Carga<EnvioResponse | 'no-encontrado'>>(null);
   const [historial, setHistorial] = useState<Carga<HistoricoEstadoEnvio[] | 'error'>>(null);
+  // Cambia después de cada acción (cancelar, cambiar estado) para volver a pedir los datos.
+  // Mientras llegan, se sigue mostrando lo anterior: el id no cambió.
+  const [recarga, setRecarga] = useState(0);
 
   useEffect(() => {
     let cancelado = false;
@@ -53,7 +57,7 @@ export function EnvioDetailPage() {
     return () => {
       cancelado = true;
     };
-  }, [id, toast]);
+  }, [id, recarga, toast]);
 
   if (envio === null || envio.id !== id) return <Spinner />;
 
@@ -76,7 +80,7 @@ export function EnvioDetailPage() {
         <StatusBadge estado={e.estadoEnvio} />
       </header>
 
-      {/* PENDIENTE LT4-13: <EnvioAcciones envio={e} /> */}
+      <EnvioAcciones envio={e} onActualizado={() => setRecarga((r) => r + 1)} />
 
       <div className={styles.secciones}>
         <Card>
