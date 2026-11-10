@@ -1,0 +1,88 @@
+.contenedor {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(380px, calc(100vw - 2 * var(--space-4)));
+}
+
+/* Tarjeta blanca con una franja de color a la izquierda según el tipo */
+.toast {
+  --toast-color: var(--color-primary);
+  --toast-soft: var(--color-accent-soft);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 12px 12px 12px 14px;
+  border: 1px solid var(--color-border);
+  border-left: 5px solid var(--toast-color);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  color: var(--color-text);
+  text-align: left;
+  animation: entrar 0.2s ease-out;
+}
+
+.success {
+  --toast-color: var(--color-success);
+  --toast-soft: var(--color-success-soft);
+}
+
+.error {
+  --toast-color: var(--color-danger);
+  --toast-soft: var(--color-danger-soft);
+}
+
+.warning {
+  --toast-color: var(--color-accent);
+  --toast-soft: var(--color-warning-soft);
+}
+
+.icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  background: var(--toast-soft);
+  color: var(--toast-color);
+}
+
+.warning .icono {
+  color: var(--color-warning);
+}
+
+.mensaje {
+  flex: 1;
+  font-weight: 600;
+}
+
+.cerrar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.cerrar:hover {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}

@@ -1,0 +1,32 @@
+.contenedor {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-6);
+}
+
+/* Anillo azul marino con un segmento amarillo (colores del logo) */
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid rgba(23, 63, 122, 0.15);
+  border-top-color: var(--color-primary);
+  border-right-color: var(--color-accent);
+  border-radius: var(--radius-full);
+  animation: girar 0.8s linear infinite;
+}
+
+/* Texto solo para lectores de pantalla. */
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
