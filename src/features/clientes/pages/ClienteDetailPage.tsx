@@ -97,6 +97,9 @@ export function ClienteDetailPage() {
         message={
           <>
             ¿Eliminar a <strong>{data.nombreCompleto}</strong>? Esta acción no se puede deshacer.
+            <br />
+            {/* shipment borra en cascada: al eliminar el cliente se eliminan sus envíos. */}
+            <strong>Atención:</strong> también se van a eliminar todos los envíos de este cliente.
           </>
         }
         confirmLabel="Eliminar"

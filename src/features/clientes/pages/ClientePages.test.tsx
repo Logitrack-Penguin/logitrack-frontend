@@ -52,6 +52,16 @@ function renderComo(rol: Rol, ruta: string) {
   return router;
 }
 
+// jsdom no implementa showModal/close del <dialog>: los simulamos (igual que ConfirmDialog.test).
+beforeAll(() => {
+  HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+    this.setAttribute('open', '');
+  };
+  HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
+    this.removeAttribute('open');
+  };
+});
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -87,6 +97,15 @@ describe('ClienteDetailPage', () => {
     renderComo('ADMIN', '/clientes/30111222');
     expect(await screen.findByRole('button', { name: /editar/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /eliminar/i })).toBeInTheDocument();
+  });
+
+  it('al eliminar avisa que también se borran los envíos del cliente', async () => {
+    vi.spyOn(clientesApi, 'obtener').mockResolvedValue(ANA);
+    renderComo('ADMIN', '/clientes/30111222');
+    await userEvent.click(await screen.findByRole('button', { name: /eliminar/i }));
+    expect(
+      screen.getByText(/también se van a eliminar todos los envíos de este cliente/i),
+    ).toBeInTheDocument();
   });
 
   it('CLIENTE ve sus datos pero no puede editar ni eliminar', async () => {
