@@ -1,11 +1,12 @@
 import { Outlet } from 'react-router';
+import { NavBar } from '../NavBar/NavBar';
+import styles from './Layout.module.css';
 
-// Esqueleto (LT4-01): barra de navegación + <Outlet />. Se completa en el issue de layout.
 export function Layout() {
   return (
     <>
-      <header>LogiTrack</header>
-      <main>
+      <NavBar />
+      <main className={styles.contenido}>
         <Outlet />
       </main>
     </>

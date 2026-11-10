@@ -1,0 +1,18 @@
+.pagina {
+  display: grid;
+  place-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  color: var(--color-primary);
+}
+
+.texto {
+  margin: 0;
+  color: var(--color-text-muted);
+}
