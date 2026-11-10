@@ -1,0 +1,59 @@
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  box-shadow: var(--shadow-sm);
+}
+
+.marca {
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  color: var(--color-accent);
+}
+
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  flex: 1;
+}
+
+.link {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  color: var(--color-primary-contrast);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.link:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.activo {
+  background: var(--color-accent);
+  color: var(--color-primary);
+}
+
+.activo:hover {
+  background: var(--color-accent-hover);
+}
+
+.usuario {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.nombre {
+  font-weight: 700;
+}
+
+.roles {
+  font-size: var(--font-size-xs);
+  opacity: 0.8;
+}

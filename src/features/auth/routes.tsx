@@ -1,4 +1,5 @@
-// src/features/auth/routes.tsx (esqueleto: Agus lo completa)
+// src/features/auth/routes.tsx (LT4-04)
 import type { RouteObject } from 'react-router';
+import { LoginPage } from './pages/LoginPage';
 
-export const authPublicRoutes: RouteObject[] = [];
+export const authPublicRoutes: RouteObject[] = [{ path: '/login', element: <LoginPage /> }];
