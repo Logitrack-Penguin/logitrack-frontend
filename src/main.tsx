@@ -6,7 +6,6 @@ import { setSesionInvalidaHandler } from './shared/api/httpClient';
 import { AuthProvider } from './shared/auth/AuthProvider';
 import { sessionStore } from './shared/auth/sessionStore';
 import { ToastProvider } from './shared/notifications/ToastProvider';
-import './index.css';
 import './shared/styles/global.css';
 
 // Un 401/403 fuera del login cierra la sesión y lleva a /login.

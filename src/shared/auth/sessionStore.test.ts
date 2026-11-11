@@ -22,6 +22,14 @@ describe('sessionStore', () => {
     expect(sessionStorage.getItem(KEY)).toBe(token);
   });
 
+  it('toma el DNI del claim "dni" solo si el token lo trae', () => {
+    sessionStore.set(crearToken({ roles: ['REPARTIDOR'], dni: '30111222' }));
+    expect(sessionStore.get()?.dni).toBe('30111222');
+
+    sessionStore.set(crearToken({ roles: ['CLIENTE'] }));
+    expect(sessionStore.get()).not.toHaveProperty('dni');
+  });
+
   it('clear borra la sesión y avisa a los suscriptores', () => {
     const oyente = vi.fn();
     const desuscribir = sessionStore.subscribe(oyente);
@@ -39,6 +47,14 @@ describe('sessionStore', () => {
     sessionStore.set('token-corrupto');
     expect(sessionStore.get()).toBeNull();
     expect(sessionStorage.getItem(KEY)).toBeNull();
+  });
+
+  it('copia el DNI del cliente si el token lo trae', () => {
+    sessionStore.set(crearToken({ roles: ['CLIENTE'], dni: '30111222' }));
+    expect(sessionStore.get()?.dni).toBe('30111222');
+
+    sessionStore.set(crearToken({ roles: ['ADMIN'] }));
+    expect(sessionStore.get()).not.toHaveProperty('dni');
   });
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validarUsuario, type UsuarioFormValues } from './validacion';
+import { validarDatosCliente, validarUsuario, type UsuarioFormValues } from './validacion';
 
 const VALIDO: UsuarioFormValues = {
   username: 'juan',
@@ -53,5 +53,31 @@ describe('validarUsuario', () => {
 
   it('la confirmación tiene que ser igual a la contraseña', () => {
     expect(con({ confirmacion: '12345679' }).confirmacion).toMatch(/no coinciden/);
+  });
+});
+
+describe('validarDatosCliente', () => {
+  const VALIDO = { dni: '30111222', nombre: 'Juan', apellido: 'Pérez', telefono: '3881234567' };
+
+  it('no devuelve errores con datos válidos (acepta tildes)', () => {
+    expect(validarDatosCliente(VALIDO)).toEqual({});
+  });
+
+  it('DNI de 8 dígitos y teléfono de 10', () => {
+    expect(validarDatosCliente({ ...VALIDO, dni: '3011122', telefono: '388123' })).toEqual({
+      dni: 'El DNI debe tener 8 dígitos.',
+      telefono: 'El teléfono debe tener 10 dígitos.',
+    });
+  });
+
+  it('nombre y apellido obligatorios y solo con letras', () => {
+    expect(validarDatosCliente({ ...VALIDO, nombre: 'Jo', apellido: 'P3rez' })).toEqual({
+      nombre: 'El nombre debe tener entre 3 y 30 caracteres.',
+      apellido: 'El apellido solo puede contener letras.',
+    });
+    expect(validarDatosCliente({ ...VALIDO, nombre: ' ', apellido: '' })).toEqual({
+      nombre: 'El nombre es obligatorio.',
+      apellido: 'El apellido es obligatorio.',
+    });
   });
 });

@@ -4,7 +4,12 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { ApiError } from '../../../shared/api/apiError';
 import { sessionStore } from '../../../shared/auth/sessionStore';
 import { enviosApi } from '../api/enviosApi';
-import { envioDePrueba, iniciarSesionComo, iniciarSesionComoRepartidor } from '../test/datos';
+import {
+  envioDePrueba,
+  iniciarSesionComo,
+  iniciarSesionComoRepartidor,
+  vincularDniDePrueba,
+} from '../test/datos';
 import { Proveedores } from '../test/Proveedores';
 import { EnvioDetailPage } from './EnvioDetailPage';
 
@@ -59,6 +64,7 @@ describe('EnvioDetailPage', () => {
 
   it.each(['ADMIN', 'CLIENTE'] as const)('%s ve el código de recepción', async (rol) => {
     iniciarSesionComo(rol);
+    vincularDniDePrueba(); // sin efecto para ADMIN
     vi.spyOn(enviosApi, 'obtener').mockResolvedValue(envioDePrueba());
     vi.spyOn(enviosApi, 'historial').mockResolvedValue([]);
     renderizar();
@@ -153,5 +159,23 @@ describe('EnvioDetailPage', () => {
     expect(screen.queryByRole('button', { name: 'Cancelar envío' })).not.toBeInTheDocument();
     expect(obtener).toHaveBeenCalledTimes(2);
     expect(historial).toHaveBeenCalledTimes(2);
+  });
+
+  it('un CLIENTE no puede ver el envío de otro cliente', async () => {
+    iniciarSesionComo('CLIENTE');
+    vincularDniDePrueba();
+    vi.spyOn(enviosApi, 'obtener').mockResolvedValue(
+      envioDePrueba({
+        idEnvio: 'e-otro',
+        codigoSeguimiento: 'LT-9999',
+        remitente: 'Nombre: Gómez, María - DNI: 38987654',
+      }),
+    );
+    vi.spyOn(enviosApi, 'historial').mockResolvedValue([]);
+    renderizar();
+
+    expect(await screen.findByText('Envío no encontrado.')).toBeInTheDocument();
+    expect(screen.queryByText(/38987654/)).not.toBeInTheDocument();
+    expect(screen.queryByText('4821')).not.toBeInTheDocument();
   });
 });

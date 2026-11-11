@@ -4,7 +4,12 @@ import { createMemoryRouter, RouterProvider, useParams } from 'react-router';
 import { ApiError } from '../../../shared/api/apiError';
 import { sessionStore } from '../../../shared/auth/sessionStore';
 import { enviosApi } from '../api/enviosApi';
-import { envioDePrueba, iniciarSesionComo, iniciarSesionComoRepartidor } from '../test/datos';
+import {
+  envioDePrueba,
+  iniciarSesionComo,
+  iniciarSesionComoRepartidor,
+  vincularDniDePrueba,
+} from '../test/datos';
 import { Proveedores } from '../test/Proveedores';
 import { EnvioSeguimientoPage } from './EnvioSeguimientoPage';
 
@@ -78,9 +83,7 @@ describe('EnvioSeguimientoPage', () => {
 
     await buscar('LT-0001');
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'No se encontró un envío con ese código.',
-    );
+    expect(await screen.findByRole('alert')).toHaveTextContent('Envío no encontrado');
     expect(screen.queryByText(/Detalle de/)).not.toBeInTheDocument();
   });
 
@@ -104,5 +107,34 @@ describe('EnvioSeguimientoPage', () => {
 
     expect(await screen.findByText('No se pudo conectar con el servidor.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Buscar' })).toBeEnabled();
+  });
+
+  it('un CLIENTE no puede abrir el envío de otro cliente con su código', async () => {
+    iniciarSesionComo('CLIENTE');
+    vincularDniDePrueba();
+    vi.spyOn(enviosApi, 'buscarPorCodigo').mockResolvedValue(
+      envioDePrueba({
+        idEnvio: 'e-otro',
+        codigoSeguimiento: 'LT-9999',
+        remitente: 'Nombre: Gómez, María - DNI: 38987654',
+      }),
+    );
+    renderizar();
+
+    await buscar('LT-9999');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Envío no encontrado');
+    expect(screen.queryByText(/Detalle de/)).not.toBeInTheDocument();
+  });
+
+  it('un CLIENTE abre sus propios envíos', async () => {
+    iniciarSesionComo('CLIENTE');
+    vincularDniDePrueba();
+    vi.spyOn(enviosApi, 'buscarPorCodigo').mockResolvedValue(envioDePrueba());
+    renderizar();
+
+    await buscar('LT-0001');
+
+    expect(await screen.findByText(/Detalle de/)).toBeInTheDocument();
   });
 });

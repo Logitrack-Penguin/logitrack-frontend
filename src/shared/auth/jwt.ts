@@ -5,6 +5,7 @@ export interface JwtClaims {
   sub: string; // username
   userId: string; // UUID
   roles: Rol[]; // sin prefijo ROLE_
+  dni?: string; // cuentas CLIENTE con su cliente vinculado y REPARTIDOR con su ficha (LT4-40)
   exp: number; // vencimiento, en segundos
   iat: number;
   iss: string;

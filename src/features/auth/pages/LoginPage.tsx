@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, type Location } from 'react-router';
 import { toApiError } from '../../../shared/api/apiError';
 import { useAuth } from '../../../shared/auth/useAuth';
-import { Button, Card, FormField } from '../../../shared/components';
+import { Button, FormField, IconEye, IconEyeOff, Logo } from '../../../shared/components';
 import styles from './LoginPage.module.css';
 
 // Lo que puede llegar en location.state:
@@ -27,6 +27,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isClaveVisible, setIsClaveVisible] = useState(false);
 
   // Con sesión (ya logueado o recién logueado) va a la ruta pedida o a /envios.
   if (sesion) {
@@ -49,57 +50,77 @@ export function LoginPage() {
 
   return (
     <main className={styles.pagina}>
-      <Card className={styles.tarjeta}>
-        <h1 className={styles.titulo}>LogiTrack</h1>
-        <p className={styles.subtitulo}>Ingresá con tu usuario.</p>
+      <section className={styles.marca} aria-label="LogiTrack">
+        <Logo size="lg" variante="oscuro" />
+        <p className={styles.eslogan}>Tus envíos, siempre en camino.</p>
+        <p className={styles.bajada}>Envíos, repartidores y clientes en un mismo lugar.</p>
+        <div className={styles.ruta} aria-hidden="true" />
+      </section>
 
-        {state.motivo && (
-          <p className={styles.aviso} role="status">
-            {AVISOS[state.motivo]}
-          </p>
-        )}
+      <section className={styles.panel}>
+        <div className={styles.contenedor}>
+          <h1 className={styles.titulo}>Iniciar sesión</h1>
+          <p className={styles.subtitulo}>Ingresá con tu usuario de LogiTrack.</p>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <FormField label="Usuario" htmlFor="username">
-            <input
-              id="username"
-              name="username"
-              autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </FormField>
-          <FormField label="Contraseña" htmlFor="password">
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </FormField>
-          <Button
-            type="submit"
-            className={styles.boton}
-            loading={isLoading}
-            disabled={!username.trim() || !password}
-          >
-            {isLoading ? 'Ingresando…' : 'Ingresar'}
-          </Button>
-          {error && (
-            <p className={styles.error} role="alert">
-              {error}
+          {state.motivo && (
+            <p className={styles.aviso} role="status">
+              {AVISOS[state.motivo]}
             </p>
           )}
-        </form>
 
-        <p className={styles.pie}>
-          ¿No tenés cuenta? <Link to="/registro">Registrate</Link>
-        </p>
-      </Card>
+          <form className={styles.formulario} onSubmit={handleSubmit} noValidate>
+            <FormField label="Usuario" htmlFor="username">
+              <input
+                id="username"
+                name="username"
+                autoComplete="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </FormField>
+            <FormField label="Contraseña" htmlFor="password">
+              <div className={styles.clave}>
+                <input
+                  id="password"
+                  name="password"
+                  type={isClaveVisible ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className={styles.ojo}
+                  aria-label={isClaveVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  aria-pressed={isClaveVisible}
+                  onClick={() => setIsClaveVisible((v) => !v)}
+                >
+                  {isClaveVisible ? <IconEyeOff /> : <IconEye />}
+                </button>
+              </div>
+            </FormField>
+            <Button
+              type="submit"
+              className={styles.boton}
+              loading={isLoading}
+              disabled={!username.trim() || !password}
+            >
+              {isLoading ? 'Ingresando…' : 'Ingresar'}
+            </Button>
+            {error && (
+              <p className={styles.error} role="alert">
+                {error}
+              </p>
+            )}
+          </form>
+
+          <p className={styles.pie}>
+            ¿No tenés cuenta? <Link to="/registro">Registrate</Link>
+          </p>
+        </div>
+      </section>
     </main>
   );
 }

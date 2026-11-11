@@ -70,3 +70,30 @@ textarea[aria-invalid='true'] {
   outline: 3px solid var(--color-accent);
   outline-offset: 2px;
 }
+
+img {
+  max-width: 100%;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  :root {
+    --font-size-xl: 1.5rem;
+  }
+
+  /* Las fichas de datos (<dl> "etiqueta: valor") pasan a una columna: la etiqueta arriba y el
+     valor abajo. Se fuerza desde acá para cubrir los detalles de todas las features. */
+  dl {
+    grid-template-columns: 1fr !important;
+    row-gap: 2px !important;
+  }
+
+  dd {
+    margin-bottom: var(--space-3) !important;
+  }
+
+  /* Botones de acción a lo ancho: más fáciles de tocar. */
+  form button[type='submit'] {
+    width: 100%;
+  }
+}

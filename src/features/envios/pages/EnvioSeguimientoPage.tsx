@@ -5,8 +5,13 @@ import { useAuth } from '../../../shared/auth/useAuth';
 import { Button, Card, FormField, fieldErrorId } from '../../../shared/components';
 import { useToast } from '../../../shared/notifications/useToast';
 import { enviosApi } from '../api/enviosApi';
+import { dniDeRemitente } from '../clienteActual';
 import { puedeVerEnvio } from '../formato';
+import { esVisible, useDniCliente } from '../useDniCliente';
 import styles from './EnvioPages.module.css';
+
+// Mismo texto que el 404 del backend, para no revelar que el código existe.
+const NO_ENCONTRADO = 'Envío no encontrado';
 
 const CAMPO = 'codigo-seguimiento';
 
@@ -15,6 +20,7 @@ export function EnvioSeguimientoPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const { sesion } = useAuth();
+  const cliente = useDniCliente();
   const [codigo, setCodigo] = useState('');
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
@@ -30,9 +36,9 @@ export function EnvioSeguimientoPage() {
     setIsLoading(true);
     try {
       const envio = await enviosApi.buscarPorCodigo(buscado);
-      // Un envío que el usuario no puede ver se trata igual que un código inexistente.
-      if (!puedeVerEnvio(envio, sesion)) {
-        setError('No se encontró un envío con ese código.');
+      // No se puede abrir el envío de otro cliente o de otro repartidor aunque se tenga el código.
+      if (!esVisible(cliente, dniDeRemitente(envio.remitente)) || !puedeVerEnvio(envio, sesion)) {
+        setError(NO_ENCONTRADO);
         setIsLoading(false);
         return;
       }
@@ -47,7 +53,7 @@ export function EnvioSeguimientoPage() {
   }
 
   return (
-    <section className={styles.pagina}>
+    <section className={`${styles.pagina} ${styles.centrada}`}>
       <h1 className={styles.titulo}>Seguimiento</h1>
       <Card className={styles.formulario}>
         <form className={styles.formulario} onSubmit={handleSubmit} noValidate>

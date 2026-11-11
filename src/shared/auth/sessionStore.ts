@@ -7,6 +7,7 @@ export interface Sesion {
   username: string; // claim "sub"
   roles: Rol[]; // claim "roles"
   exp: number; // claim "exp", en segundos
+  dni?: string; // claim "dni": solo CLIENTE con su cliente de shipment vinculado
 }
 
 // Se guarda solo el token: la sesión se deriva de sus claims.
@@ -21,7 +22,14 @@ function desdeToken(token: string): Sesion | null {
     Array.isArray(c.roles) &&
     typeof c.exp === 'number';
   if (!esValido || estaVencido(c)) return null;
-  return { token, userId: c.userId, username: c.sub, roles: c.roles, exp: c.exp };
+  return {
+    token,
+    userId: c.userId,
+    username: c.sub,
+    roles: c.roles,
+    exp: c.exp,
+    ...(typeof c.dni === 'string' && { dni: c.dni }),
+  };
 }
 
 function leer(): Sesion | null {
