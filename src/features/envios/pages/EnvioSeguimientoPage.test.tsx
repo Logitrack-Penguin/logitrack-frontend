@@ -2,9 +2,14 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider, useParams } from 'react-router';
 import { ApiError } from '../../../shared/api/apiError';
-import { enviosApi } from '../api/enviosApi';
 import { sessionStore } from '../../../shared/auth/sessionStore';
-import { envioDePrueba, iniciarSesionComo, vincularDniDePrueba } from '../test/datos';
+import { enviosApi } from '../api/enviosApi';
+import {
+  envioDePrueba,
+  iniciarSesionComo,
+  iniciarSesionComoRepartidor,
+  ponerDniEnElToken,
+} from '../test/datos';
 import { Proveedores } from '../test/Proveedores';
 import { EnvioSeguimientoPage } from './EnvioSeguimientoPage';
 
@@ -34,6 +39,10 @@ async function buscar(codigo: string) {
 }
 
 describe('EnvioSeguimientoPage', () => {
+  beforeEach(() => {
+    iniciarSesionComo('ADMIN');
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
     sessionStore.clear();
@@ -65,6 +74,19 @@ describe('EnvioSeguimientoPage', () => {
     expect(screen.getByLabelText('Código de seguimiento')).toHaveAttribute('aria-invalid', 'true');
   });
 
+  it('un REPARTIDOR no puede abrir un envío asignado a otro', async () => {
+    iniciarSesionComoRepartidor('28111222');
+    vi.spyOn(enviosApi, 'buscarPorCodigo').mockResolvedValue(
+      envioDePrueba({ estadoEnvio: 'EN_RUTA', repartidorAsignado: 'DNI: 30222333' }),
+    );
+    renderizar();
+
+    await buscar('LT-0001');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Envío no encontrado');
+    expect(screen.queryByText(/Detalle de/)).not.toBeInTheDocument();
+  });
+
   it('no busca si el código está vacío', async () => {
     const buscarPorCodigo = vi.spyOn(enviosApi, 'buscarPorCodigo');
     renderizar();
@@ -89,7 +111,7 @@ describe('EnvioSeguimientoPage', () => {
 
   it('un CLIENTE no puede abrir el envío de otro cliente con su código', async () => {
     iniciarSesionComo('CLIENTE');
-    vincularDniDePrueba();
+    ponerDniEnElToken();
     vi.spyOn(enviosApi, 'buscarPorCodigo').mockResolvedValue(
       envioDePrueba({
         idEnvio: 'e-otro',
@@ -107,7 +129,7 @@ describe('EnvioSeguimientoPage', () => {
 
   it('un CLIENTE abre sus propios envíos', async () => {
     iniciarSesionComo('CLIENTE');
-    vincularDniDePrueba();
+    ponerDniEnElToken();
     vi.spyOn(enviosApi, 'buscarPorCodigo').mockResolvedValue(envioDePrueba());
     renderizar();
 

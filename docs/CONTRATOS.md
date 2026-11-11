@@ -128,6 +128,20 @@ export const PERMISOS = {
 
 Si una feature necesita un permiso nuevo, se agrega con un PR a `permissions.ts` y a esta tabla.
 
+**Envíos visibles para un REPARTIDOR.** Un REPARTIDOR solo ve los envíos asignados a él
+(`puedeVerEnvio` en `features/envios/formato.ts`). Los pendientes de asignación tampoco los ve,
+porque no puede asignárselos. Se aplica en el listado, en el detalle y en el seguimiento. Un envío
+que no ve se muestra como "no encontrado". Se compara `Sesion.dni` (el DNI de su ficha, que carga el
+alta unificada, LT4-40) con `repartidorAsignado` (`"DNI: <dni>"`). Un REPARTIDOR sin DNI no ve
+ningún envío. shipment-service aplica la misma regla con `X-User-Dni` (404 para un envío ajeno).
+
+**Envíos y ficha de un CLIENTE.** Un CLIENTE (sin ADMIN) solo ve sus envíos (`useDniCliente` +
+`esVisible`, comparando `Sesion.dni` con el DNI del remitente) y su propia ficha: "Mis datos" la
+abre directamente. El DNI sale solo del token: security-service lo carga al registrar la cuenta
+y, en las cuentas anteriores a LT4-40, lo completa al iniciar sesión buscando el cliente con el
+mismo email. Un CLIENTE sin DNI ve un aviso para volver a iniciar sesión (`RequireDniCliente`).
+shipment-service aplica la misma regla.
+
 ```tsx
 // shared/guards/RequireAuth.tsx, RequireRole.tsx, Can.tsx
 <RequireAuth />                                // ruta "padre" que exige sesión

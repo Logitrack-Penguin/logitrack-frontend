@@ -12,6 +12,7 @@ import {
   formatearFecha,
   formatearTarifa,
   puedeVerCodigoRecepcion,
+  puedeVerEnvio,
 } from '../formato';
 import type { EnvioResponse, HistoricoEstadoEnvio } from '../types';
 import { esVisible, useDniCliente } from '../useDniCliente';
@@ -64,10 +65,12 @@ export function EnvioDetailPage() {
 
   if (envio === null || envio.id !== id) return <Spinner />;
 
-  // El envío de otro cliente se muestra igual que uno inexistente: no se revela que existe.
+  // Un envío que el usuario no puede ver (de otro cliente o de otro repartidor) se muestra igual
+  // que uno inexistente: no se revela que existe.
   if (
     envio.valor === 'no-encontrado' ||
-    !esVisible(cliente, dniDeRemitente(envio.valor.remitente))
+    !esVisible(cliente, dniDeRemitente(envio.valor.remitente)) ||
+    !puedeVerEnvio(envio.valor, sesion)
   ) {
     return (
       <EmptyState

@@ -4,7 +4,12 @@ import { createMemoryRouter, RouterProvider, useParams } from 'react-router';
 import { ApiError } from '../../../shared/api/apiError';
 import { sessionStore } from '../../../shared/auth/sessionStore';
 import { enviosApi } from '../api/enviosApi';
-import { envioDePrueba, iniciarSesionComo, vincularDniDePrueba } from '../test/datos';
+import {
+  envioDePrueba,
+  iniciarSesionComo,
+  iniciarSesionComoRepartidor,
+  ponerDniEnElToken,
+} from '../test/datos';
 import { Proveedores } from '../test/Proveedores';
 import { EnvioListPage } from './EnvioListPage';
 
@@ -76,7 +81,7 @@ describe('EnvioListPage', () => {
 
   it('al hacer clic en una fila abre el detalle', async () => {
     iniciarSesionComo('CLIENTE');
-    vincularDniDePrueba();
+    ponerDniEnElToken();
     vi.spyOn(enviosApi, 'listar').mockResolvedValue([envioDePrueba()]);
     renderizar();
 
@@ -88,12 +93,50 @@ describe('EnvioListPage', () => {
   });
 
   it('el botón "Nuevo envío" solo aparece con el permiso envios.crear', async () => {
-    iniciarSesionComo('REPARTIDOR');
-    vi.spyOn(enviosApi, 'listar').mockResolvedValue([envioDePrueba()]);
+    iniciarSesionComoRepartidor('28111222');
+    vi.spyOn(enviosApi, 'listar').mockResolvedValue([
+      envioDePrueba({ estadoEnvio: 'REPARTIDOR_ASIGNADO', repartidorAsignado: 'DNI: 28111222' }),
+    ]);
     renderizar();
 
     await screen.findByText('LT-0001');
     expect(screen.queryByRole('button', { name: 'Nuevo envío' })).not.toBeInTheDocument();
+  });
+
+  it('REPARTIDOR solo ve los envíos asignados a él', async () => {
+    iniciarSesionComoRepartidor('28111222');
+    vi.spyOn(enviosApi, 'listar').mockResolvedValue([
+      envioDePrueba(),
+      envioDePrueba({
+        idEnvio: 'e2',
+        codigoSeguimiento: 'LT-0002',
+        estadoEnvio: 'EN_RUTA',
+        repartidorAsignado: 'DNI: 28111222',
+      }),
+      envioDePrueba({
+        idEnvio: 'e3',
+        codigoSeguimiento: 'LT-0003',
+        estadoEnvio: 'REPARTIDOR_ASIGNADO',
+        repartidorAsignado: 'DNI: 30222333',
+      }),
+    ]);
+    renderizar();
+
+    expect(await screen.findByText('LT-0002')).toBeInTheDocument();
+    expect(screen.queryByText('LT-0001')).not.toBeInTheDocument();
+    expect(screen.queryByText('LT-0003')).not.toBeInTheDocument();
+    expect(screen.getByText('1 envío')).toBeInTheDocument();
+  });
+
+  it('si al REPARTIDOR no le queda ningún envío visible, muestra el estado vacío', async () => {
+    iniciarSesionComoRepartidor('28111222');
+    vi.spyOn(enviosApi, 'listar').mockResolvedValue([
+      envioDePrueba(),
+      envioDePrueba({ idEnvio: 'e2', estadoEnvio: 'EN_RUTA', repartidorAsignado: 'DNI: 30222333' }),
+    ]);
+    renderizar();
+
+    expect(await screen.findByText('No hay envíos.')).toBeInTheDocument();
   });
 
   it('muestra el error del backend en un toast', async () => {
@@ -108,7 +151,7 @@ describe('EnvioListPage', () => {
   describe('CLIENTE', () => {
     it('solo ve sus envíos, no los de otros clientes', async () => {
       iniciarSesionComo('CLIENTE');
-      vincularDniDePrueba();
+      ponerDniEnElToken();
       vi.spyOn(enviosApi, 'listar').mockResolvedValue([
         envioDePrueba(),
         envioDePrueba({
@@ -125,8 +168,9 @@ describe('EnvioListPage', () => {
       expect(screen.getByText('1 envío')).toBeInTheDocument();
     });
 
-    it.each(['ADMIN', 'REPARTIDOR'] as const)('%s sigue viendo todos', async (rol) => {
-      iniciarSesionComo(rol);
+    // El REPARTIDOR también se filtra, pero por el DNI del repartidor asignado (ver más arriba).
+    it('ADMIN sigue viendo todos', async () => {
+      iniciarSesionComo('ADMIN');
       vi.spyOn(enviosApi, 'listar').mockResolvedValue([
         envioDePrueba(),
         envioDePrueba({

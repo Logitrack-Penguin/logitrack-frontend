@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toApiError } from '../../../shared/api/apiError';
+import { useAuth } from '../../../shared/auth/useAuth';
 import {
   Button,
   DataTable,
@@ -14,7 +15,7 @@ import { Can } from '../../../shared/guards/Can';
 import { useToast } from '../../../shared/notifications/useToast';
 import { enviosApi } from '../api/enviosApi';
 import { dniDeRemitente } from '../clienteActual';
-import { ESTADOS_ENVIO, formatearFecha, formatearTarifa } from '../formato';
+import { ESTADOS_ENVIO, formatearFecha, formatearTarifa, puedeVerEnvio } from '../formato';
 import type { EnvioResponse, EstadoEnvio } from '../types';
 import { esVisible, useDniCliente } from '../useDniCliente';
 import styles from './EnvioPages.module.css';
@@ -35,6 +36,7 @@ type Filtro = EstadoEnvio | '';
 export function EnvioListPage() {
   const navigate = useNavigate();
   const toast = useToast();
+  const { sesion } = useAuth();
   const cliente = useDniCliente();
   const [estado, setEstado] = useState<Filtro>('');
   // Se guarda con qué filtro se cargó: si no coincide con el actual, está cargando.
@@ -60,9 +62,9 @@ export function EnvioListPage() {
 
   const isLoading = datos === null || datos.estado !== estado;
   const textoEstado = ESTADOS_ENVIO.find((o) => o.value === estado)?.label.toLowerCase();
-  // Un CLIENTE solo ve sus envíos: el backend devuelve todos, se filtra por el DNI del remitente.
-  const envios = (datos?.envios ?? []).filter((e) =>
-    esVisible(cliente, dniDeRemitente(e.remitente)),
+  // Un CLIENTE solo ve sus envíos (por el DNI del remitente) y un REPARTIDOR, los asignados a él.
+  const envios = (datos?.envios ?? []).filter(
+    (e) => esVisible(cliente, dniDeRemitente(e.remitente)) && puedeVerEnvio(e, sesion),
   );
 
   return (
@@ -92,17 +94,7 @@ export function EnvioListPage() {
           ))}
         </select>
         {cliente.debeFiltrar && (
-          <span className={styles.mensaje}>
-            Tus envíos (DNI {cliente.dni})
-            {cliente.puedeCambiarDni && (
-              <>
-                {' · '}
-                <button type="button" className={styles.link} onClick={cliente.desvincular}>
-                  Cambiar DNI
-                </button>
-              </>
-            )}
-          </span>
+          <span className={styles.mensaje}>Tus envíos (DNI {cliente.dni})</span>
         )}
       </div>
 

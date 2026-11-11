@@ -25,7 +25,7 @@ const JUAN: ClienteResponse = {
   email: 'juan@mail.com',
 };
 
-function renderComo(rol: Rol, ruta: string) {
+function renderComo(rol: Rol, ruta: string, dni?: string, logout = vi.fn()) {
   const auth: AuthContextValue = {
     sesion: {
       token: 't',
@@ -33,9 +33,10 @@ function renderComo(rol: Rol, ruta: string) {
       username: 'test',
       roles: [rol],
       exp: Date.now() / 1000 + 3600,
+      ...(dni !== undefined && { dni }),
     },
     login: vi.fn(),
-    logout: vi.fn(),
+    logout,
     tienePermiso: (p) => rolesTienenPermiso([rol], p),
   };
   const router = createMemoryRouter(
@@ -123,18 +124,36 @@ describe('ClienteDetailPage', () => {
 });
 
 describe('MisDatosPage', () => {
-  it('con un DNI válido navega al detalle', async () => {
+  it('un CLIENTE con el DNI en el token va directo a su ficha', async () => {
     vi.spyOn(clientesApi, 'obtener').mockResolvedValue(ANA);
-    const router = renderComo('CLIENTE', '/clientes/mis-datos');
-    await userEvent.type(await screen.findByLabelText('Tu DNI'), '30111222');
-    await userEvent.click(screen.getByRole('button', { name: /ver mis datos/i }));
+    const router = renderComo('CLIENTE', '/clientes/mis-datos', '30111222');
+    await screen.findByText(ANA.email);
+    expect(router.state.location.pathname).toBe('/clientes/30111222');
+    expect(screen.queryByLabelText('DNI')).not.toBeInTheDocument();
+  });
+
+  it('un CLIENTE sin DNI en el token ve el aviso y puede volver a iniciar sesión', async () => {
+    const logout = vi.fn();
+    renderComo('CLIENTE', '/clientes/mis-datos', undefined, logout);
+    expect(
+      await screen.findByText(/Tu cuenta todavía no está vinculada a tus datos de cliente/),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Volver a iniciar sesión' }));
+    expect(logout).toHaveBeenCalled();
+  });
+
+  it('un ADMIN sin DNI busca una ficha por DNI', async () => {
+    vi.spyOn(clientesApi, 'obtener').mockResolvedValue(ANA);
+    const router = renderComo('ADMIN', '/clientes/mis-datos');
+    await userEvent.type(await screen.findByLabelText('DNI'), '30111222');
+    await userEvent.click(screen.getByRole('button', { name: /ver datos/i }));
     expect(router.state.location.pathname).toBe('/clientes/30111222');
   });
 
   it('con un DNI inválido muestra el error', async () => {
-    renderComo('CLIENTE', '/clientes/mis-datos');
-    await userEvent.type(await screen.findByLabelText('Tu DNI'), '123');
-    await userEvent.click(screen.getByRole('button', { name: /ver mis datos/i }));
+    renderComo('ADMIN', '/clientes/mis-datos');
+    await userEvent.type(await screen.findByLabelText('DNI'), '123');
+    await userEvent.click(screen.getByRole('button', { name: /ver datos/i }));
     expect(screen.getByText('El DNI debe tener 8 dígitos.')).toBeInTheDocument();
   });
 });

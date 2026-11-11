@@ -1,6 +1,7 @@
 // src/features/envios/formato.ts — cómo se muestran los datos de un envío en pantalla.
 import type { Rol } from '../../shared/auth/permissions';
-import type { Direccion, EstadoEnvio } from './types';
+import type { Sesion } from '../../shared/auth/sessionStore';
+import type { Direccion, EnvioResponse, EstadoEnvio } from './types';
 
 /** Mismo texto que usa StatusBadge, para el filtro del listado. */
 export const ESTADOS_ENVIO: { value: EstadoEnvio; label: string }[] = [
@@ -40,4 +41,15 @@ export function formatearDireccion(d: Direccion): string {
  */
 export function puedeVerCodigoRecepcion(roles: readonly Rol[]): boolean {
   return roles.includes('ADMIN') || roles.includes('CLIENTE');
+}
+
+/**
+ * Un REPARTIDOR solo ve los envíos asignados a él: los pendientes de asignación tampoco, porque no
+ * puede asignárselos. Se compara con el DNI de su ficha, que viaja en el token (claim "dni"); sin
+ * DNI no ve ninguno. Al CLIENTE lo filtra esVisible (useDniCliente) y ADMIN ve todo.
+ */
+export function puedeVerEnvio(envio: EnvioResponse, sesion: Sesion | null): boolean {
+  if (!sesion) return false;
+  if (sesion.roles.includes('ADMIN') || sesion.roles.includes('CLIENTE')) return true;
+  return sesion.dni !== undefined && envio.repartidorAsignado === `DNI: ${sesion.dni}`;
 }
