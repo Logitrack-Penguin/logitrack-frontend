@@ -9,7 +9,7 @@ import styles from './UsuarioPages.module.css';
 
 /**
  * /usuarios/nuevo — solo ADMIN. Usa el mismo endpoint que el registro: como el interceptor adjunta
- * el token del ADMIN, el backend permite pedir roles ADMIN o REPARTIDOR.
+ * el token del ADMIN, la UI ofrece REPARTIDOR o CLIENTE.
  */
 export function UsuarioCreatePage() {
   const navigate = useNavigate();

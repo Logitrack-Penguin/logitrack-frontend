@@ -5,7 +5,8 @@ import { ROL_TEXTO, type RegistroRequest } from '../types';
 import { validarUsuario, type UsuarioFormErrors, type UsuarioFormValues } from '../validacion';
 import styles from './UsuarioForm.module.css';
 
-const ROLES: Rol[] = ['REPARTIDOR', 'ADMIN', 'CLIENTE'];
+/**ADMIN no se ofrece: no se crean administradores desde la UI*/
+const ROLES: Rol[] = ['REPARTIDOR', 'CLIENTE'];
 
 export interface UsuarioFormProps {
   /** true en el alta del ADMIN: muestra el selector de rol y lo envía. El registro público no manda roles. */

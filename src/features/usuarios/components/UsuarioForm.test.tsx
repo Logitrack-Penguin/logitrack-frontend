@@ -52,13 +52,21 @@ describe('UsuarioForm', () => {
     render(<UsuarioForm conRol submitLabel="Crear usuario" onSubmit={onSubmit} />);
 
     expect(screen.getByRole('note')).toHaveTextContent(/sección Repartidores/);
-    await user.selectOptions(screen.getByLabelText('Rol'), 'ADMIN');
+    await user.selectOptions(screen.getByLabelText('Rol'), 'CLIENTE');
     expect(screen.queryByRole('note')).not.toBeInTheDocument();
 
     await completar(user);
     await user.click(screen.getByRole('button', { name: 'Crear usuario' }));
 
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ roles: ['ADMIN'] }));
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ roles: ['CLIENTE'] }));
+  });
+
+  it('el alta del ADMIN no ofrece crear administradores', () => {
+    render(<UsuarioForm conRol submitLabel="Crear usuario" onSubmit={vi.fn()} />);
+
+    expect(screen.queryByRole('option', { name: 'Administrador' })).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Repartidor' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Cliente' })).toBeInTheDocument();
   });
 
   it('vuelve a habilitar el botón si el envío falla', async () => {
