@@ -1,7 +1,6 @@
 // src/features/repartidores/routes.tsx (LT4-21)
-import type { RouteObject } from 'react-router';
+import { Navigate, type RouteObject } from 'react-router';
 import { RequireRole } from '../../shared/guards/RequireRole';
-import { RepartidorCreatePage } from './pages/RepartidorCreatePage';
 import { RepartidorDetailPage } from './pages/RepartidorDetailPage';
 import { RepartidorEditPage } from './pages/RepartidorEditPage';
 import { RepartidorListPage } from './pages/RepartidorListPage';
@@ -17,7 +16,9 @@ export const repartidoresRoutes: RouteObject[] = [
   {
     element: <RequireRole permiso="repartidores.gestionar" />,
     children: [
-      { path: '/repartidores/nuevo', element: <RepartidorCreatePage /> },
+      // LT4-40: el alta de repartidor es una sola, en /usuarios/nuevo (crea el login y la ficha
+      // con el mismo DNI). Esta ruta queda como atajo para no romper enlaces viejos.
+      { path: '/repartidores/nuevo', element: <Navigate to="/usuarios/nuevo" replace /> },
       { path: '/repartidores/:dni/editar', element: <RepartidorEditPage /> },
     ],
   },

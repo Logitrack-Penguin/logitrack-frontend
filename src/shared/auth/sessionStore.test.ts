@@ -22,6 +22,14 @@ describe('sessionStore', () => {
     expect(sessionStorage.getItem(KEY)).toBe(token);
   });
 
+  it('toma el DNI del claim "dni" solo si el token lo trae', () => {
+    sessionStore.set(crearToken({ roles: ['REPARTIDOR'], dni: '30111222' }));
+    expect(sessionStore.get()?.dni).toBe('30111222');
+
+    sessionStore.set(crearToken({ roles: ['CLIENTE'] }));
+    expect(sessionStore.get()).not.toHaveProperty('dni');
+  });
+
   it('clear borra la sesión y avisa a los suscriptores', () => {
     const oyente = vi.fn();
     const desuscribir = sessionStore.subscribe(oyente);

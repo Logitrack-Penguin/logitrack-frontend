@@ -58,14 +58,14 @@ describe('UsuarioForm', () => {
     expect(onSubmit.mock.calls[0][0]).not.toHaveProperty('roles');
   });
 
-  it('el alta del ADMIN envía el rol elegido y avisa sobre el repartidor', async () => {
+  it('el alta del ADMIN envía el rol elegido; con CLIENTE no pide la ficha de repartidor', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(<UsuarioForm conRol submitLabel="Crear usuario" onSubmit={onSubmit} />);
 
-    expect(screen.getByRole('note')).toHaveTextContent(/sección Repartidores/);
+    expect(screen.getByRole('group', { name: 'Datos del repartidor' })).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Rol'), 'CLIENTE');
-    expect(screen.queryByRole('note')).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Datos del repartidor' })).not.toBeInTheDocument();
 
     await completar(user);
     await completarCliente(user); // una cuenta CLIENTE necesita sus datos de cliente
@@ -118,8 +118,54 @@ describe('UsuarioForm', () => {
     const user = userEvent.setup();
     render(<UsuarioForm conRol submitLabel="Crear usuario" onSubmit={vi.fn()} />);
 
-    expect(screen.queryByLabelText('DNI')).not.toBeInTheDocument();
+    // Con REPARTIDOR el DNI es el de la ficha (sin la ayuda del DNI de cliente).
+    expect(screen.queryByText('8 dígitos, sin puntos.')).not.toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Rol'), 'CLIENTE');
-    expect(screen.getByLabelText('DNI')).toBeInTheDocument();
+    expect(screen.getByText('8 dígitos, sin puntos.')).toBeInTheDocument();
+  });
+
+  it('con REPARTIDOR valida la ficha y no envía si falta algún dato', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<UsuarioForm conRol submitLabel="Crear usuario" onSubmit={onSubmit} />);
+
+    await completar(user);
+    await user.type(screen.getByLabelText('DNI'), '123');
+    await user.click(screen.getByRole('button', { name: 'Crear usuario' }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText('El DNI debe tener 8 dígitos.')).toBeInTheDocument();
+    expect(screen.getByText('El vehículo es obligatorio.')).toBeInTheDocument();
+  });
+
+  it('con REPARTIDOR envía el usuario con su DNI y la ficha del repartidor', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<UsuarioForm conRol submitLabel="Crear usuario" onSubmit={onSubmit} />);
+
+    await completar(user);
+    await user.type(screen.getByLabelText('DNI'), '30111222');
+    await user.type(screen.getByLabelText('Nombre'), 'Juan');
+    await user.type(screen.getByLabelText('Apellido'), 'Perez');
+    await user.type(screen.getByLabelText('Teléfono'), '3881112222');
+    await user.type(screen.getByLabelText('Vehículo'), 'moto');
+    await user.click(screen.getByRole('button', { name: 'Crear usuario' }));
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      {
+        username: 'juan',
+        email: 'juan@mail.com',
+        password: '12345678',
+        roles: ['REPARTIDOR'],
+        dni: '30111222',
+      },
+      {
+        dni: '30111222',
+        nombre: 'Juan',
+        apellido: 'Perez',
+        telefono: '3881112222',
+        tipoVehiculo: 'MOTO',
+      },
+    );
   });
 });

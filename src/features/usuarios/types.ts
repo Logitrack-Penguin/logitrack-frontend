@@ -11,7 +11,7 @@ export interface RegistroRequest {
   roles?: Rol[]; // si no se manda, el backend asigna CLIENTE
   // Obligatorios si la cuenta es CLIENTE: security-service crea (o vincula) el cliente en
   // shipment-service con estos datos y guarda el DNI en el usuario y en el token.
-  dni?: string; // 8 dígitos
+  dni?: string; // 8 dígitos. También obligatorio con REPARTIDOR (LT4-40): va en el token
   nombre?: string; // solo letras, 3 a 30
   apellido?: string; // solo letras
   telefono?: string; // 10 dígitos
