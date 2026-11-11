@@ -27,7 +27,7 @@ export function UsuarioCreatePage() {
   }
 
   return (
-    <section className={styles.pagina}>
+    <section className={`${styles.pagina} ${styles.centrada}`}>
       <header className={styles.encabezado}>
         <h1 className={styles.titulo}>Nuevo usuario</h1>
       </header>

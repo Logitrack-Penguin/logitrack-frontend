@@ -11,4 +11,5 @@ export { EmptyState, type EmptyStateProps } from './EmptyState/EmptyState';
 export { Card, type CardProps } from './Card/Card';
 export { FilterChips, type FilterChipsProps, type FilterOption } from './FilterChips/FilterChips';
 export { SearchInput, type SearchInputProps } from './SearchInput/SearchInput';
+export { Logo, type LogoProps } from './Logo/Logo';
 export * from './icons/icons';

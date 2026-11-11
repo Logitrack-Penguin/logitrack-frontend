@@ -50,7 +50,7 @@ export function EnvioSeguimientoPage() {
   }
 
   return (
-    <section className={styles.pagina}>
+    <section className={`${styles.pagina} ${styles.centrada}`}>
       <h1 className={styles.titulo}>Seguimiento</h1>
       <Card className={styles.formulario}>
         <form className={styles.formulario} onSubmit={handleSubmit} noValidate>
