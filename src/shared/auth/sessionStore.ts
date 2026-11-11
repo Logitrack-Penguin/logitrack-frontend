@@ -6,6 +6,7 @@ export interface Sesion {
   userId: string; // claim "userId"
   username: string; // claim "sub"
   roles: Rol[]; // claim "roles"
+  dni?: string; // claim "dni": vincula el usuario con su repartidor o cliente
   exp: number; // claim "exp", en segundos
 }
 
@@ -21,7 +22,9 @@ function desdeToken(token: string): Sesion | null {
     Array.isArray(c.roles) &&
     typeof c.exp === 'number';
   if (!esValido || estaVencido(c)) return null;
-  return { token, userId: c.userId, username: c.sub, roles: c.roles, exp: c.exp };
+  const sesion: Sesion = { token, userId: c.userId, username: c.sub, roles: c.roles, exp: c.exp };
+  if (typeof c.dni === 'string') sesion.dni = c.dni;
+  return sesion;
 }
 
 function leer(): Sesion | null {

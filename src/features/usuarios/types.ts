@@ -9,6 +9,7 @@ export interface RegistroRequest {
   password: string; // 8 a 72 caracteres (BCrypt solo usa 72 bytes)
   email: string; // formato email, hasta 100 caracteres
   roles?: Rol[]; // si no se manda, el backend asigna CLIENTE
+  dni?: string; // 8 dígitos; obligatorio si roles incluye REPARTIDOR (va en el token)
 }
 
 // Respuesta de /auth/register (201), /auth/me y /users. Nunca trae la contraseña.
@@ -17,6 +18,7 @@ export interface UserResponse {
   username: string;
   email: string;
   roles: Rol[]; // en Java es un Set: el orden no está garantizado
+  dni?: string | null; // null si el usuario no tiene DNI
 }
 
 export const ROL_TEXTO: Record<Rol, string> = {

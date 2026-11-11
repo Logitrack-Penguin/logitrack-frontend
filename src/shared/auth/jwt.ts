@@ -5,6 +5,7 @@ export interface JwtClaims {
   sub: string; // username
   userId: string; // UUID
   roles: Rol[]; // sin prefijo ROLE_
+  dni?: string; // solo si el usuario tiene DNI (obligatorio para REPARTIDOR)
   exp: number; // vencimiento, en segundos
   iat: number;
   iss: string;
