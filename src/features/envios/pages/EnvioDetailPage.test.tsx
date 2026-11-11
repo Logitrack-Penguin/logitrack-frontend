@@ -8,7 +8,7 @@ import {
   envioDePrueba,
   iniciarSesionComo,
   iniciarSesionComoRepartidor,
-  vincularDniDePrueba,
+  ponerDniEnElToken,
 } from '../test/datos';
 import { Proveedores } from '../test/Proveedores';
 import { EnvioDetailPage } from './EnvioDetailPage';
@@ -64,7 +64,7 @@ describe('EnvioDetailPage', () => {
 
   it.each(['ADMIN', 'CLIENTE'] as const)('%s ve el código de recepción', async (rol) => {
     iniciarSesionComo(rol);
-    vincularDniDePrueba(); // sin efecto para ADMIN
+    ponerDniEnElToken(); // sin efecto para ADMIN
     vi.spyOn(enviosApi, 'obtener').mockResolvedValue(envioDePrueba());
     vi.spyOn(enviosApi, 'historial').mockResolvedValue([]);
     renderizar();
@@ -163,7 +163,7 @@ describe('EnvioDetailPage', () => {
 
   it('un CLIENTE no puede ver el envío de otro cliente', async () => {
     iniciarSesionComo('CLIENTE');
-    vincularDniDePrueba();
+    ponerDniEnElToken();
     vi.spyOn(enviosApi, 'obtener').mockResolvedValue(
       envioDePrueba({
         idEnvio: 'e-otro',

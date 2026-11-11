@@ -120,17 +120,6 @@
   gap: var(--space-3);
 }
 
-/* Botón con aspecto de link, por ejemplo "Cambiar DNI". */
-.link {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--color-primary);
-  font: inherit;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
 /* Páginas de un solo formulario o ficha: título y tarjeta centrados en la pantalla. */
 .centrada {
   align-items: center;

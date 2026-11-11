@@ -2,7 +2,6 @@
 import type { Rol } from '../../../shared/auth/permissions';
 import { sessionStore } from '../../../shared/auth/sessionStore';
 import { crearToken } from '../../../test/jwt';
-import { dniVinculado } from '../clienteActual';
 import type { EnvioResponse } from '../types';
 
 /** DNI del remitente de envioDePrueba(). */
@@ -38,21 +37,19 @@ export function envioDePrueba(cambios: Partial<EnvioResponse> = {}): EnvioRespon
   };
 }
 
-/** Inicia sesión con esos roles y sin DNI de cliente vinculado (se borra el de tests anteriores). */
+/** Inicia sesión con esos roles y sin DNI en el token. */
 export function iniciarSesionComo(...roles: Rol[]): void {
-  localStorage.clear();
   sessionStore.set(crearToken({ roles }));
 }
 
-/** Deja vinculado un DNI al usuario logueado, como si ya lo hubiera verificado. */
-export function vincularDniDePrueba(dni = DNI_DE_PRUEBA): void {
+/** Vuelve a iniciar la misma sesión, ahora con un DNI en el token (claim "dni", LT4-40). */
+export function ponerDniEnElToken(dni = DNI_DE_PRUEBA): void {
   const sesion = sessionStore.get();
   if (!sesion) throw new Error('Llamar primero a iniciarSesionComo().');
-  dniVinculado.set(sesion.userId, dni);
+  sessionStore.set(crearToken({ roles: sesion.roles, dni }));
 }
 
 /** Un usuario REPARTIDOR con el DNI de su ficha en el token (claim "dni", LT4-40). */
 export function iniciarSesionComoRepartidor(dni: string): void {
-  localStorage.clear();
   sessionStore.set(crearToken({ roles: ['REPARTIDOR'], dni }));
 }

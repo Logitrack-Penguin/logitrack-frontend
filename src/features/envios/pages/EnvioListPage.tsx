@@ -94,17 +94,7 @@ export function EnvioListPage() {
           ))}
         </select>
         {cliente.debeFiltrar && (
-          <span className={styles.mensaje}>
-            Tus envíos (DNI {cliente.dni})
-            {cliente.puedeCambiarDni && (
-              <>
-                {' · '}
-                <button type="button" className={styles.link} onClick={cliente.desvincular}>
-                  Cambiar DNI
-                </button>
-              </>
-            )}
-          </span>
+          <span className={styles.mensaje}>Tus envíos (DNI {cliente.dni})</span>
         )}
       </div>
 

@@ -4,12 +4,7 @@ import { createMemoryRouter, RouterProvider, useParams } from 'react-router';
 import { ApiError } from '../../../shared/api/apiError';
 import { enviosApi } from '../api/enviosApi';
 import { sessionStore } from '../../../shared/auth/sessionStore';
-import {
-  DNI_DE_PRUEBA,
-  envioDePrueba,
-  iniciarSesionComo,
-  vincularDniDePrueba,
-} from '../test/datos';
+import { DNI_DE_PRUEBA, envioDePrueba, iniciarSesionComo, ponerDniEnElToken } from '../test/datos';
 import { EnvioCreatePage } from './EnvioCreatePage';
 import { Proveedores } from '../test/Proveedores';
 
@@ -155,7 +150,7 @@ describe('EnvioCreatePage', () => {
 
   it('un CLIENTE crea a su nombre: su DNI viene cargado y no se puede cambiar', async () => {
     iniciarSesionComo('CLIENTE');
-    vincularDniDePrueba();
+    ponerDniEnElToken();
     const crear = vi.spyOn(enviosApi, 'crear').mockResolvedValue(envioDePrueba());
     const user = userEvent.setup();
     renderizar();

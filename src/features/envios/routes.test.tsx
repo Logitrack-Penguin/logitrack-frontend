@@ -4,10 +4,8 @@ import { sessionStore } from '../../shared/auth/sessionStore';
 import { crearToken } from '../../test/jwt';
 import { enviosRoutes } from './routes';
 import userEvent from '@testing-library/user-event';
-import { clientesApi } from '../clientes/api/clientesApi';
-import { usuariosApi } from '../usuarios/api/usuariosApi';
 import { enviosApi } from './api/enviosApi';
-import { envioDePrueba, iniciarSesionComo, vincularDniDePrueba } from './test/datos';
+import { envioDePrueba, iniciarSesionComo, ponerDniEnElToken } from './test/datos';
 import { Proveedores } from './test/Proveedores';
 
 function renderizar(ruta: string) {
@@ -29,7 +27,7 @@ describe('enviosRoutes', () => {
 
   it.each(['ADMIN', 'CLIENTE'] as const)('%s puede abrir /envios/nuevo', async (rol) => {
     iniciarSesionComo(rol);
-    vincularDniDePrueba();
+    ponerDniEnElToken();
     renderizar('/envios/nuevo');
 
     expect(await screen.findByRole('heading', { name: 'Nuevo envío' })).toBeInTheDocument();
@@ -43,8 +41,7 @@ describe('enviosRoutes', () => {
     expect(screen.queryByRole('heading', { name: 'Nuevo envío' })).not.toBeInTheDocument();
   });
 
-  it('un CLIENTE con el DNI en el token ve sus envíos sin vincular nada', async () => {
-    localStorage.clear();
+  it('un CLIENTE con el DNI en el token ve solo sus envíos', async () => {
     sessionStore.set(crearToken({ roles: ['CLIENTE'], dni: '30111222' }));
     vi.spyOn(enviosApi, 'listar').mockResolvedValue([
       envioDePrueba(),
@@ -58,77 +55,39 @@ describe('enviosRoutes', () => {
 
     expect(await screen.findByText('LT-0001')).toBeInTheDocument();
     expect(screen.queryByText('LT-9999')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Cambiar DNI' })).not.toBeInTheDocument();
+    expect(screen.getByText('Tus envíos (DNI 30111222)')).toBeInTheDocument();
     vi.restoreAllMocks();
   });
 
-  describe('CLIENTE sin DNI vinculado', () => {
+  describe('CLIENTE sin DNI en el token', () => {
     afterEach(() => {
       vi.restoreAllMocks();
     });
 
-    it('antes de ver sus envíos le pide el DNI y lo verifica con su email', async () => {
+    it('no pide envíos y le explica que vuelva a iniciar sesión', async () => {
       iniciarSesionComo('CLIENTE');
-      vi.spyOn(usuariosApi, 'me').mockResolvedValue({
-        id: 'u',
-        username: 'ana',
-        email: 'ana@email.com',
-        roles: ['CLIENTE'],
-      });
-      vi.spyOn(clientesApi, 'obtener').mockResolvedValue({
-        idCliente: 'c',
-        dni: '30111222',
-        nombreCompleto: 'Pérez, Ana',
-        email: 'ana@email.com',
-        telefono: '3880000000',
-        fechaCreacion: '2026-11-01T10:00:00',
-      });
-      const listar = vi.spyOn(enviosApi, 'listar').mockResolvedValue([envioDePrueba()]);
-      const user = userEvent.setup();
-      renderizar('/envios');
-
-      expect(await screen.findByRole('heading', { name: 'Tus envíos' })).toBeInTheDocument();
-      expect(listar).not.toHaveBeenCalled();
-
-      await user.type(screen.getByLabelText('Tu DNI'), '30111222');
-      await user.click(screen.getByRole('button', { name: 'Continuar' }));
-
-      expect(await screen.findByText('LT-0001')).toBeInTheDocument();
-    });
-
-    it('si el DNI no es suyo, no lo deja pasar', async () => {
-      iniciarSesionComo('CLIENTE');
-      vi.spyOn(usuariosApi, 'me').mockResolvedValue({
-        id: 'u',
-        username: 'ana',
-        email: 'ana@email.com',
-        roles: ['CLIENTE'],
-      });
-      vi.spyOn(clientesApi, 'obtener').mockResolvedValue({
-        idCliente: 'c',
-        dni: '38987654',
-        nombreCompleto: 'Gómez, María',
-        email: 'maria@email.com',
-        telefono: '3880000000',
-        fechaCreacion: '2026-11-01T10:00:00',
-      });
       const listar = vi.spyOn(enviosApi, 'listar');
       const user = userEvent.setup();
       renderizar('/envios');
 
-      await user.type(await screen.findByLabelText('Tu DNI'), '38987654');
-      await user.click(screen.getByRole('button', { name: 'Continuar' }));
-
-      expect(await screen.findByText('Ese DNI no corresponde a tu usuario.')).toBeInTheDocument();
+      expect(
+        await screen.findByText(/Tu cuenta todavía no está vinculada a tus datos de cliente/),
+      ).toBeInTheDocument();
       expect(listar).not.toHaveBeenCalled();
+
+      await user.click(screen.getByRole('button', { name: 'Volver a iniciar sesión' }));
+      expect(sessionStore.get()).toBeNull();
     });
 
-    it.each(['ADMIN', 'REPARTIDOR'] as const)('%s no tiene que vincular nada', async (rol) => {
-      iniciarSesionComo(rol);
-      vi.spyOn(enviosApi, 'listar').mockResolvedValue([]);
-      renderizar('/envios');
+    it.each(['ADMIN', 'REPARTIDOR'] as const)(
+      '%s pasa directo aunque no tenga DNI',
+      async (rol) => {
+        iniciarSesionComo(rol);
+        vi.spyOn(enviosApi, 'listar').mockResolvedValue([]);
+        renderizar('/envios');
 
-      expect(await screen.findByRole('heading', { name: 'Envíos' })).toBeInTheDocument();
-    });
+        expect(await screen.findByRole('heading', { name: 'Envíos' })).toBeInTheDocument();
+      },
+    );
   });
 });

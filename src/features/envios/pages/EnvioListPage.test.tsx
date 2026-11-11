@@ -8,7 +8,7 @@ import {
   envioDePrueba,
   iniciarSesionComo,
   iniciarSesionComoRepartidor,
-  vincularDniDePrueba,
+  ponerDniEnElToken,
 } from '../test/datos';
 import { Proveedores } from '../test/Proveedores';
 import { EnvioListPage } from './EnvioListPage';
@@ -81,7 +81,7 @@ describe('EnvioListPage', () => {
 
   it('al hacer clic en una fila abre el detalle', async () => {
     iniciarSesionComo('CLIENTE');
-    vincularDniDePrueba();
+    ponerDniEnElToken();
     vi.spyOn(enviosApi, 'listar').mockResolvedValue([envioDePrueba()]);
     renderizar();
 
@@ -151,7 +151,7 @@ describe('EnvioListPage', () => {
   describe('CLIENTE', () => {
     it('solo ve sus envíos, no los de otros clientes', async () => {
       iniciarSesionComo('CLIENTE');
-      vincularDniDePrueba();
+      ponerDniEnElToken();
       vi.spyOn(enviosApi, 'listar').mockResolvedValue([
         envioDePrueba(),
         envioDePrueba({

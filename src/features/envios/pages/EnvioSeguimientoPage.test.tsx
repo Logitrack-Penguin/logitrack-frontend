@@ -8,7 +8,7 @@ import {
   envioDePrueba,
   iniciarSesionComo,
   iniciarSesionComoRepartidor,
-  vincularDniDePrueba,
+  ponerDniEnElToken,
 } from '../test/datos';
 import { Proveedores } from '../test/Proveedores';
 import { EnvioSeguimientoPage } from './EnvioSeguimientoPage';
@@ -111,7 +111,7 @@ describe('EnvioSeguimientoPage', () => {
 
   it('un CLIENTE no puede abrir el envío de otro cliente con su código', async () => {
     iniciarSesionComo('CLIENTE');
-    vincularDniDePrueba();
+    ponerDniEnElToken();
     vi.spyOn(enviosApi, 'buscarPorCodigo').mockResolvedValue(
       envioDePrueba({
         idEnvio: 'e-otro',
@@ -129,7 +129,7 @@ describe('EnvioSeguimientoPage', () => {
 
   it('un CLIENTE abre sus propios envíos', async () => {
     iniciarSesionComo('CLIENTE');
-    vincularDniDePrueba();
+    ponerDniEnElToken();
     vi.spyOn(enviosApi, 'buscarPorCodigo').mockResolvedValue(envioDePrueba());
     renderizar();
 
