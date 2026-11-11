@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toApiError } from '../../../shared/api/apiError';
+import { useAuth } from '../../../shared/auth/useAuth';
 import {
   Button,
   DataTable,
@@ -13,7 +14,7 @@ import {
 import { Can } from '../../../shared/guards/Can';
 import { useToast } from '../../../shared/notifications/useToast';
 import { enviosApi } from '../api/enviosApi';
-import { ESTADOS_ENVIO, formatearFecha, formatearTarifa } from '../formato';
+import { ESTADOS_ENVIO, formatearFecha, formatearTarifa, puedeVerEnvio } from '../formato';
 import type { EnvioResponse, EstadoEnvio } from '../types';
 import styles from './EnvioPages.module.css';
 
@@ -33,6 +34,7 @@ type Filtro = EstadoEnvio | '';
 export function EnvioListPage() {
   const navigate = useNavigate();
   const toast = useToast();
+  const { sesion } = useAuth();
   const [estado, setEstado] = useState<Filtro>('');
   // Se guarda con qué filtro se cargó: si no coincide con el actual, está cargando.
   const [datos, setDatos] = useState<{ estado: Filtro; envios: EnvioResponse[] } | null>(null);
@@ -56,6 +58,7 @@ export function EnvioListPage() {
   }, [estado, toast]);
 
   const isLoading = datos === null || datos.estado !== estado;
+  const visibles = datos?.envios.filter((e) => puedeVerEnvio(e, sesion)) ?? [];
   const textoEstado = ESTADOS_ENVIO.find((o) => o.value === estado)?.label.toLowerCase();
 
   return (
@@ -88,17 +91,17 @@ export function EnvioListPage() {
 
       {isLoading ? (
         <Spinner />
-      ) : datos.envios.length === 0 ? (
+      ) : visibles.length === 0 ? (
         <EmptyState
           message={textoEstado ? `No hay envíos en estado ${textoEstado}.` : 'No hay envíos.'}
         />
       ) : (
         <DataTable
           columns={COLUMNAS}
-          rows={datos.envios}
+          rows={visibles}
           getRowKey={(e) => e.idEnvio}
           onRowClick={(e) => navigate(`/envios/${e.idEnvio}`)}
-          footer={`${datos.envios.length} ${datos.envios.length === 1 ? 'envío' : 'envíos'}`}
+          footer={`${visibles.length} ${visibles.length === 1 ? 'envío' : 'envíos'}`}
         />
       )}
     </section>

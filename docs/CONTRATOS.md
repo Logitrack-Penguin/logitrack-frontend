@@ -127,6 +127,13 @@ export const PERMISOS = {
 
 Si una feature necesita un permiso nuevo, se agrega con un PR a `permissions.ts` y a esta tabla.
 
+**Envíos visibles para un REPARTIDOR.** Un REPARTIDOR solo ve los envíos asignados a él
+(`puedeVerEnvio` en `features/envios/formato.ts`). Los pendientes de asignación tampoco los ve,
+porque no puede asignárselos. Se aplica en el listado, en el detalle y en el seguimiento. Un envío
+que no ve se muestra como "no encontrado". Convención: **el username de un usuario REPARTIDOR es
+su DNI**, que se compara con `repartidorAsignado` (`"DNI: <dni>"`). Por ahora solo se oculta en la
+UI y el backend todavía devuelve todos los envíos.
+
 ```tsx
 // shared/guards/RequireAuth.tsx, RequireRole.tsx, Can.tsx
 <RequireAuth />                                // ruta "padre" que exige sesión

@@ -11,6 +11,7 @@ import {
   formatearFecha,
   formatearTarifa,
   puedeVerCodigoRecepcion,
+  puedeVerEnvio,
 } from '../formato';
 import type { EnvioResponse, HistoricoEstadoEnvio } from '../types';
 import styles from './EnvioPages.module.css';
@@ -61,7 +62,8 @@ export function EnvioDetailPage() {
 
   if (envio === null || envio.id !== id) return <Spinner />;
 
-  if (envio.valor === 'no-encontrado') {
+  // Un envío que el usuario no puede ver se trata igual que uno inexistente.
+  if (envio.valor === 'no-encontrado' || !puedeVerEnvio(envio.valor, sesion)) {
     return (
       <EmptyState
         message="Envío no encontrado."

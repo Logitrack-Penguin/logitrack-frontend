@@ -37,3 +37,8 @@ export function envioDePrueba(cambios: Partial<EnvioResponse> = {}): EnvioRespon
 export function iniciarSesionComo(...roles: Rol[]): void {
   sessionStore.set(crearToken({ roles }));
 }
+
+/** Un usuario REPARTIDOR cuyo username es su DNI (la convención que usa puedeVerEnvio). */
+export function iniciarSesionComoRepartidor(dni: string): void {
+  sessionStore.set(crearToken({ sub: dni, roles: ['REPARTIDOR'] }));
+}

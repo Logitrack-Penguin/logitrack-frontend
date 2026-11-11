@@ -4,7 +4,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { ApiError } from '../../../shared/api/apiError';
 import { sessionStore } from '../../../shared/auth/sessionStore';
 import { enviosApi } from '../api/enviosApi';
-import { envioDePrueba, iniciarSesionComo } from '../test/datos';
+import { envioDePrueba, iniciarSesionComo, iniciarSesionComoRepartidor } from '../test/datos';
 import { Proveedores } from '../test/Proveedores';
 import { EnvioDetailPage } from './EnvioDetailPage';
 
@@ -67,8 +67,10 @@ describe('EnvioDetailPage', () => {
   });
 
   it('REPARTIDOR no ve el código de recepción', async () => {
-    iniciarSesionComo('REPARTIDOR');
-    vi.spyOn(enviosApi, 'obtener').mockResolvedValue(envioDePrueba());
+    iniciarSesionComoRepartidor('28111222');
+    vi.spyOn(enviosApi, 'obtener').mockResolvedValue(
+      envioDePrueba({ estadoEnvio: 'REPARTIDOR_ASIGNADO', repartidorAsignado: 'DNI: 28111222' }),
+    );
     vi.spyOn(enviosApi, 'historial').mockResolvedValue([]);
     renderizar();
 
@@ -85,6 +87,38 @@ describe('EnvioDetailPage', () => {
 
     expect(await screen.findByText('Envío no encontrado.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Volver al listado' })).toBeInTheDocument();
+  });
+
+  it('REPARTIDOR ve un envío asignado a él', async () => {
+    iniciarSesionComoRepartidor('28111222');
+    vi.spyOn(enviosApi, 'obtener').mockResolvedValue(
+      envioDePrueba({ estadoEnvio: 'EN_RUTA', repartidorAsignado: 'DNI: 28111222' }),
+    );
+    vi.spyOn(enviosApi, 'historial').mockResolvedValue([]);
+    renderizar();
+
+    expect(await screen.findByRole('heading', { name: 'Envío LT-0001' })).toBeInTheDocument();
+  });
+
+  it('REPARTIDOR ve "Envío no encontrado" en un envío pendiente de asignación', async () => {
+    iniciarSesionComoRepartidor('28111222');
+    vi.spyOn(enviosApi, 'obtener').mockResolvedValue(envioDePrueba());
+    vi.spyOn(enviosApi, 'historial').mockResolvedValue([]);
+    renderizar();
+
+    expect(await screen.findByText('Envío no encontrado.')).toBeInTheDocument();
+  });
+
+  it('REPARTIDOR ve "Envío no encontrado" en un envío asignado a otro', async () => {
+    iniciarSesionComoRepartidor('28111222');
+    vi.spyOn(enviosApi, 'obtener').mockResolvedValue(
+      envioDePrueba({ estadoEnvio: 'EN_RUTA', repartidorAsignado: 'DNI: 30222333' }),
+    );
+    vi.spyOn(enviosApi, 'historial').mockResolvedValue([]);
+    renderizar();
+
+    expect(await screen.findByText('Envío no encontrado.')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Envío LT-0001' })).not.toBeInTheDocument();
   });
 
   it('si falla el historial, el resto del detalle se muestra igual', async () => {

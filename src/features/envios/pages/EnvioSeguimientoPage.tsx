@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { toApiError } from '../../../shared/api/apiError';
+import { useAuth } from '../../../shared/auth/useAuth';
 import { Button, Card, FormField, fieldErrorId } from '../../../shared/components';
 import { useToast } from '../../../shared/notifications/useToast';
 import { enviosApi } from '../api/enviosApi';
+import { puedeVerEnvio } from '../formato';
 import styles from './EnvioPages.module.css';
 
 const CAMPO = 'codigo-seguimiento';
@@ -12,6 +14,7 @@ const CAMPO = 'codigo-seguimiento';
 export function EnvioSeguimientoPage() {
   const navigate = useNavigate();
   const toast = useToast();
+  const { sesion } = useAuth();
   const [codigo, setCodigo] = useState('');
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +30,12 @@ export function EnvioSeguimientoPage() {
     setIsLoading(true);
     try {
       const envio = await enviosApi.buscarPorCodigo(buscado);
+      // Un envío que el usuario no puede ver se trata igual que un código inexistente.
+      if (!puedeVerEnvio(envio, sesion)) {
+        setError('No se encontró un envío con ese código.');
+        setIsLoading(false);
+        return;
+      }
       navigate(`/envios/${envio.idEnvio}`);
     } catch (e) {
       const apiError = toApiError(e);

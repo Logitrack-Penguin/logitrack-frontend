@@ -3,7 +3,12 @@ import {
   formatearFecha,
   formatearTarifa,
   puedeVerCodigoRecepcion,
+  puedeVerEnvio,
 } from './formato';
+import type { Rol } from '../../shared/auth/permissions';
+import type { Sesion } from '../../shared/auth/sessionStore';
+import { envioDePrueba } from './test/datos';
+import type { EstadoEnvio } from './types';
 
 describe('formatearFecha', () => {
   it('convierte un LocalDate sin correrlo por zona horaria', () => {
@@ -51,5 +56,45 @@ describe('puedeVerCodigoRecepcion', () => {
   it('no lo ve REPARTIDOR ni alguien sin roles', () => {
     expect(puedeVerCodigoRecepcion(['REPARTIDOR'])).toBe(false);
     expect(puedeVerCodigoRecepcion([])).toBe(false);
+  });
+});
+
+describe('puedeVerEnvio', () => {
+  const sesion = (username: string, ...roles: Rol[]): Sesion => ({
+    token: 't',
+    userId: 'u',
+    username,
+    roles,
+    exp: 0,
+  });
+  const ajeno = (estadoEnvio: EstadoEnvio) =>
+    envioDePrueba({ estadoEnvio, repartidorAsignado: 'DNI: 30222333' });
+
+  it('ADMIN y CLIENTE ven cualquier envío', () => {
+    expect(puedeVerEnvio(ajeno('EN_RUTA'), sesion('admin', 'ADMIN'))).toBe(true);
+    expect(puedeVerEnvio(ajeno('EN_RUTA'), sesion('cliente', 'CLIENTE'))).toBe(true);
+  });
+
+  it('REPARTIDOR no ve los pendientes de asignación', () => {
+    expect(puedeVerEnvio(envioDePrueba(), sesion('28111222', 'REPARTIDOR'))).toBe(false);
+  });
+
+  it('REPARTIDOR ve los asignados a él', () => {
+    const propio = envioDePrueba({
+      estadoEnvio: 'EN_RUTA',
+      repartidorAsignado: 'DNI: 28111222',
+    });
+    expect(puedeVerEnvio(propio, sesion('28111222', 'REPARTIDOR'))).toBe(true);
+  });
+
+  it.each(['REPARTIDOR_ASIGNADO', 'EN_RUTA', 'ENTREGADO'] as const)(
+    'REPARTIDOR no ve un envío %s asignado a otro',
+    (estado) => {
+      expect(puedeVerEnvio(ajeno(estado), sesion('28111222', 'REPARTIDOR'))).toBe(false);
+    },
+  );
+
+  it('sin sesión no se ve nada', () => {
+    expect(puedeVerEnvio(envioDePrueba(), null)).toBe(false);
   });
 });

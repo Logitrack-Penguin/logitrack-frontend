@@ -2,8 +2,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider, useParams } from 'react-router';
 import { ApiError } from '../../../shared/api/apiError';
+import { sessionStore } from '../../../shared/auth/sessionStore';
 import { enviosApi } from '../api/enviosApi';
-import { envioDePrueba } from '../test/datos';
+import { envioDePrueba, iniciarSesionComo, iniciarSesionComoRepartidor } from '../test/datos';
 import { Proveedores } from '../test/Proveedores';
 import { EnvioSeguimientoPage } from './EnvioSeguimientoPage';
 
@@ -33,8 +34,13 @@ async function buscar(codigo: string) {
 }
 
 describe('EnvioSeguimientoPage', () => {
+  beforeEach(() => {
+    iniciarSesionComo('ADMIN');
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
+    sessionStore.clear();
   });
 
   it('si encuentra el envío, abre su detalle', async () => {
@@ -61,6 +67,21 @@ describe('EnvioSeguimientoPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Envío no encontrado');
     expect(screen.getByLabelText('Código de seguimiento')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('un REPARTIDOR no puede abrir un envío asignado a otro', async () => {
+    iniciarSesionComoRepartidor('28111222');
+    vi.spyOn(enviosApi, 'buscarPorCodigo').mockResolvedValue(
+      envioDePrueba({ estadoEnvio: 'EN_RUTA', repartidorAsignado: 'DNI: 30222333' }),
+    );
+    renderizar();
+
+    await buscar('LT-0001');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No se encontró un envío con ese código.',
+    );
+    expect(screen.queryByText(/Detalle de/)).not.toBeInTheDocument();
   });
 
   it('no busca si el código está vacío', async () => {
