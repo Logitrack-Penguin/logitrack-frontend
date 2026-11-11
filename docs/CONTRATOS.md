@@ -64,7 +64,7 @@ export interface Sesion {
   username: string;
   roles: Rol[];
   exp: number;
-  dni?: string; // claim "dni" (LT4-40): vincula el usuario con su repartidor o cliente
+  dni?: string; // claim "dni": CLIENTE con sus datos de cliente y REPARTIDOR con su ficha (LT4-40)
 }
 export function useAuth(): {
   sesion: Sesion | null;
@@ -220,7 +220,12 @@ export interface RegistroRequest {
   password: string; // 8 a 72 caracteres (BCrypt solo usa 72 bytes)
   email: string; // formato email, hasta 100 caracteres
   roles?: Rol[]; // si no se manda, el backend asigna CLIENTE
-  dni?: string; // 8 dígitos; obligatorio con REPARTIDOR (400 si falta, 409 si ya existe)
+  // Obligatorios si la cuenta es CLIENTE: security-service crea el cliente en shipment-service
+  // (o lo vincula si ya existe con el mismo email) y guarda el DNI en el usuario y en el token.
+  dni?: string; // 8 dígitos. También obligatorio con REPARTIDOR (LT4-40): va en el token
+  nombre?: string; // solo letras, 3 a 30
+  apellido?: string; // solo letras
+  telefono?: string; // 10 dígitos
 }
 
 // Respuesta de POST /auth/register (201), GET /auth/me y GET /users (solo ADMIN)
@@ -229,7 +234,7 @@ export interface UserResponse {
   username: string;
   email: string;
   roles: Rol[]; // en Java es un Set: el orden no está garantizado
-  dni?: string | null; // null si el usuario no tiene DNI
+  dni?: string | null; // DNI del cliente vinculado; null si no es cliente
 }
 ```
 
@@ -244,13 +249,16 @@ usuariosApi.listar(): Promise<UserResponse[]>;
 | ------ | --------------------------------------------------------------------- |
 | 400    | Datos inválidos. `message` trae `"campo: motivo; …"` (sin `detalles`) |
 | 403    | Pedir un rol privilegiado sin token de ADMIN                          |
-| 409    | Username, email o DNI ya existentes                                   |
+| 409    | Username o email ya existentes                                        |
+| 409    | El DNI ya tiene cuenta, o es de un cliente con otro email             |
+| 503    | shipment-service no respondió al crear el cliente (no se crea cuenta) |
 
 **Alta unificada de repartidor (LT4-40).** En `/usuarios/nuevo`, con rol REPARTIDOR el formulario
 pide también la ficha (DNI, nombre, apellido, teléfono y vehículo). Primero se crea la ficha en
-courier y después el usuario con el mismo DNI. Si falla el usuario, se borra la ficha. El DNI viaja
-en el JWT, el gateway lo reenvía como `X-User-Dni` y courier lo usa para que un REPARTIDOR solo vea y
-cambie su propia ficha (403 con la de otro).
+courier y después el usuario con el mismo DNI (400 si falta, 409 si ya tiene cuenta). Si falla el
+usuario, se borra la ficha. "Nuevo repartidor" y `/repartidores/nuevo` llevan a esta pantalla. El DNI
+viaja en el JWT, el gateway lo reenvía como `X-User-Dni` y courier lo usa para que un REPARTIDOR solo
+vea y cambie su propia ficha (403 con la de otro).
 
 Rutas: `/registro` (pública), `/perfil` (cualquier usuario logueado), `/usuarios` y `/usuarios/nuevo`
 (permiso `usuarios.gestionar`). Después de registrarse, `/registro` navega a `/login` con

@@ -50,3 +50,39 @@ export function validarUsuario(values: UsuarioFormValues): UsuarioFormErrors {
 
   return errores;
 }
+
+// ---------- Datos del cliente (cuenta CLIENTE) ----------
+// Mismas reglas que RegistroRequest.java, que a su vez copia ClienteRequestDto de shipment-service.
+
+export interface DatosClienteValues {
+  dni: string;
+  nombre: string;
+  apellido: string;
+  telefono: string;
+}
+
+export type DatosClienteErrors = Partial<Record<keyof DatosClienteValues, string>>;
+
+const SOLO_LETRAS = /^[\p{L} ]+$/u;
+
+export function validarDatosCliente(values: DatosClienteValues): DatosClienteErrors {
+  const errores: DatosClienteErrors = {};
+  const nombre = values.nombre.trim();
+  const apellido = values.apellido.trim();
+
+  if (!/^\d{8}$/.test(values.dni.trim())) errores.dni = 'El DNI debe tener 8 dígitos.';
+
+  if (!nombre) errores.nombre = 'El nombre es obligatorio.';
+  else if (nombre.length < 3 || nombre.length > 30)
+    errores.nombre = 'El nombre debe tener entre 3 y 30 caracteres.';
+  else if (!SOLO_LETRAS.test(nombre)) errores.nombre = 'El nombre solo puede contener letras.';
+
+  if (!apellido) errores.apellido = 'El apellido es obligatorio.';
+  else if (!SOLO_LETRAS.test(apellido))
+    errores.apellido = 'El apellido solo puede contener letras.';
+
+  if (!/^\d{10}$/.test(values.telefono.trim()))
+    errores.telefono = 'El teléfono debe tener 10 dígitos.';
+
+  return errores;
+}

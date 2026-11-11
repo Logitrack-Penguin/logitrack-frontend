@@ -11,6 +11,7 @@ import {
   validarEnvio,
   type FormularioEnvio,
 } from '../validarEnvio';
+import { useDniCliente } from '../useDniCliente';
 import styles from './EnvioPages.module.css';
 
 interface Campo {
@@ -18,6 +19,7 @@ interface Campo {
   label: string;
   numerico?: boolean;
   hint?: string;
+  soloLectura?: boolean;
 }
 
 const PAQUETE: Campo[] = [
@@ -45,7 +47,12 @@ const GRUPOS: { titulo: string; campos: Campo[] }[] = [
 export function EnvioCreatePage() {
   const navigate = useNavigate();
   const toast = useToast();
-  const [valores, setValores] = useState<FormularioEnvio>(FORMULARIO_VACIO);
+  const cliente = useDniCliente();
+  // Un CLIENTE solo crea envíos a su nombre: su DNI verificado viene cargado y no se puede cambiar.
+  const [valores, setValores] = useState<FormularioEnvio>(() => ({
+    ...FORMULARIO_VACIO,
+    dniCliente: cliente.dni ?? '',
+  }));
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -56,7 +63,9 @@ export function EnvioCreatePage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const dto = armarEnvioRequest(valores);
+    const dto = armarEnvioRequest(
+      cliente.debeFiltrar ? { ...valores, dniCliente: cliente.dni ?? '' } : valores,
+    );
     const encontrados = validarEnvio(dto);
     setErrores(encontrados);
     if (Object.keys(encontrados).length > 0) return;
@@ -77,7 +86,7 @@ export function EnvioCreatePage() {
     }
   }
 
-  const campo = ({ clave, label, numerico, hint }: Campo) => (
+  const campo = ({ clave, label, numerico, hint, soloLectura }: Campo) => (
     <FormField key={clave} label={label} htmlFor={clave} error={errores[clave]} hint={hint}>
       <input
         id={clave}
@@ -88,6 +97,7 @@ export function EnvioCreatePage() {
         step={numerico ? 'any' : undefined}
         inputMode={numerico ? 'decimal' : undefined}
         value={valores[clave]}
+        readOnly={soloLectura}
         onChange={handleChange}
         aria-invalid={!!errores[clave]}
         aria-describedby={errores[clave] ? fieldErrorId(clave) : undefined}
@@ -114,7 +124,10 @@ export function EnvioCreatePage() {
               {campo({
                 clave: 'dniCliente',
                 label: 'DNI del cliente',
-                hint: 'El DNI con el que el cliente está registrado (8 dígitos).',
+                hint: cliente.debeFiltrar
+                  ? 'Tu DNI de cliente (no se puede cambiar).'
+                  : 'El DNI con el que el cliente está registrado (8 dígitos).',
+                soloLectura: cliente.debeFiltrar,
               })}
             </fieldset>
           </Card>

@@ -4,7 +4,14 @@ import type { Rol } from '../../../shared/auth/permissions';
 import { TIPOS_VEHICULO, type RepartidorRequest } from '../../repartidores/types';
 import { type ErroresRepartidor, validarRepartidor } from '../../repartidores/validation';
 import { ROL_TEXTO, type RegistroRequest } from '../types';
-import { validarUsuario, type UsuarioFormErrors, type UsuarioFormValues } from '../validacion';
+import {
+  validarDatosCliente,
+  validarUsuario,
+  type DatosClienteErrors,
+  type DatosClienteValues,
+  type UsuarioFormErrors,
+  type UsuarioFormValues,
+} from '../validacion';
 import styles from './UsuarioForm.module.css';
 
 /**ADMIN no se ofrece: no se crean administradores desde la UI*/
@@ -23,6 +30,7 @@ export interface UsuarioFormProps {
 }
 
 const VACIO: UsuarioFormValues = { username: '', email: '', password: '', confirmacion: '' };
+const CLIENTE_VACIO: DatosClienteValues = { dni: '', nombre: '', apellido: '', telefono: '' };
 
 const REPARTIDOR_VACIO: RepartidorRequest = {
   dni: '',
@@ -44,8 +52,15 @@ export function UsuarioForm({ conRol = false, submitLabel, onSubmit }: UsuarioFo
   const [values, setValues] = useState(VACIO);
   const [rol, setRol] = useState<Rol>('REPARTIDOR');
   const [errores, setErrores] = useState<UsuarioFormErrors>({});
+  // Una cuenta CLIENTE necesita sus datos de cliente: el backend crea (o vincula) el cliente en
+  // shipment-service y así el usuario ve sus envíos desde el primer ingreso.
+  const [cliente, setCliente] = useState(CLIENTE_VACIO);
+  const [erroresCliente, setErroresCliente] = useState<DatosClienteErrors>({});
+  const isCliente = !conRol || rol === 'CLIENTE';
+  // Una cuenta REPARTIDOR se crea junto con su ficha de courier, con el mismo DNI (LT4-40).
   const [repartidor, setRepartidor] = useState(REPARTIDOR_VACIO);
   const [erroresRepartidor, setErroresRepartidor] = useState<ErroresRepartidor>({});
+  const isRepartidor = conRol && rol === 'REPARTIDOR';
   const [isLoading, setIsLoading] = useState(false);
 
   function handleChange(e: ChangeEvent<HTMLInputElement>) {
@@ -57,7 +72,8 @@ export function UsuarioForm({ conRol = false, submitLabel, onSubmit }: UsuarioFo
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const conRepartidor = conRol && rol === 'REPARTIDOR';
+    const nuevosErrores = validarUsuario(values);
+    const nuevosErroresCliente = isCliente ? validarDatosCliente(cliente) : {};
     const ficha: RepartidorRequest = {
       dni: repartidor.dni.trim(),
       nombre: repartidor.nombre.trim(),
@@ -65,22 +81,32 @@ export function UsuarioForm({ conRol = false, submitLabel, onSubmit }: UsuarioFo
       telefono: repartidor.telefono.trim(),
       tipoVehiculo: repartidor.tipoVehiculo.trim().toUpperCase(),
     };
-    const nuevosErrores = validarUsuario(values);
-    const nuevosErroresRepartidor = conRepartidor ? validarRepartidor(ficha) : {};
+    const nuevosErroresRepartidor = isRepartidor ? validarRepartidor(ficha) : {};
     setErrores(nuevosErrores);
+    setErroresCliente(nuevosErroresCliente);
     setErroresRepartidor(nuevosErroresRepartidor);
-    if (Object.keys(nuevosErrores).length + Object.keys(nuevosErroresRepartidor).length > 0) return;
+    const cantidadErrores =
+      Object.keys(nuevosErrores).length +
+      Object.keys(nuevosErroresCliente).length +
+      Object.keys(nuevosErroresRepartidor).length;
+    if (cantidadErrores > 0) return;
 
     const dto: RegistroRequest = {
       username: values.username.trim(),
       email: values.email.trim(),
       password: values.password,
       ...(conRol && { roles: [rol] }),
-      ...(conRepartidor && { dni: ficha.dni }),
+      ...(isCliente && {
+        dni: cliente.dni.trim(),
+        nombre: cliente.nombre.trim(),
+        apellido: cliente.apellido.trim(),
+        telefono: cliente.telefono.trim(),
+      }),
+      ...(isRepartidor && { dni: ficha.dni }),
     };
     setIsLoading(true);
     try {
-      await (conRepartidor ? onSubmit(dto, ficha) : onSubmit(dto));
+      await (isRepartidor ? onSubmit(dto, ficha) : onSubmit(dto));
     } catch {
       // La página ya mostró el error con un toast.
     } finally {
@@ -109,6 +135,31 @@ export function UsuarioForm({ conRol = false, submitLabel, onSubmit }: UsuarioFo
     </FormField>
   );
 
+  const campoCliente = (
+    name: keyof DatosClienteValues,
+    label: string,
+    autoComplete: string,
+    inputMode?: 'numeric' | 'tel',
+    hint?: string,
+  ) => (
+    <FormField label={label} htmlFor={name} error={erroresCliente[name]} hint={hint}>
+      <input
+        id={name}
+        name={name}
+        type="text"
+        inputMode={inputMode}
+        autoComplete={autoComplete}
+        value={cliente[name]}
+        onChange={(e) => {
+          setCliente((c) => ({ ...c, [name]: e.target.value }));
+          setErroresCliente((err) => ({ ...err, [name]: undefined }));
+        }}
+        aria-invalid={!!erroresCliente[name]}
+        aria-describedby={erroresCliente[name] ? fieldErrorId(name) : undefined}
+      />
+    </FormField>
+  );
+
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
       {campo('username', 'Usuario', 'text', 'username', 'Entre 3 y 50 caracteres.')}
@@ -127,7 +178,7 @@ export function UsuarioForm({ conRol = false, submitLabel, onSubmit }: UsuarioFo
               ))}
             </select>
           </FormField>
-          {rol === 'REPARTIDOR' && (
+          {isRepartidor && (
             <fieldset className={styles.grupo}>
               <legend>Datos del repartidor</legend>
               {CAMPOS_REPARTIDOR.map(({ campo, label, numerico }) => {
@@ -162,6 +213,15 @@ export function UsuarioForm({ conRol = false, submitLabel, onSubmit }: UsuarioFo
               </datalist>
             </fieldset>
           )}
+        </>
+      )}
+
+      {isCliente && (
+        <>
+          {campoCliente('dni', 'DNI', 'off', 'numeric', '8 dígitos, sin puntos.')}
+          {campoCliente('nombre', 'Nombre', 'given-name')}
+          {campoCliente('apellido', 'Apellido', 'family-name')}
+          {campoCliente('telefono', 'Teléfono', 'tel', 'tel', '10 dígitos, sin 0 ni 15.')}
         </>
       )}
 

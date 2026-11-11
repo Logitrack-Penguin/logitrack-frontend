@@ -4,7 +4,12 @@ import { toApiError } from '../../../shared/api/apiError';
 import { Button, Card, FormField, fieldErrorId } from '../../../shared/components';
 import { useToast } from '../../../shared/notifications/useToast';
 import { enviosApi } from '../api/enviosApi';
+import { dniDeRemitente } from '../clienteActual';
+import { esVisible, useDniCliente } from '../useDniCliente';
 import styles from './EnvioPages.module.css';
+
+// Mismo texto que el 404 del backend, para no revelar que el código existe.
+const NO_ENCONTRADO = 'Envío no encontrado';
 
 const CAMPO = 'codigo-seguimiento';
 
@@ -12,6 +17,7 @@ const CAMPO = 'codigo-seguimiento';
 export function EnvioSeguimientoPage() {
   const navigate = useNavigate();
   const toast = useToast();
+  const cliente = useDniCliente();
   const [codigo, setCodigo] = useState('');
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +33,12 @@ export function EnvioSeguimientoPage() {
     setIsLoading(true);
     try {
       const envio = await enviosApi.buscarPorCodigo(buscado);
+      // Un CLIENTE no puede abrir el envío de otro cliente aunque tenga el código.
+      if (!esVisible(cliente, dniDeRemitente(envio.remitente))) {
+        setError(NO_ENCONTRADO);
+        setIsLoading(false);
+        return;
+      }
       navigate(`/envios/${envio.idEnvio}`);
     } catch (e) {
       const apiError = toApiError(e);

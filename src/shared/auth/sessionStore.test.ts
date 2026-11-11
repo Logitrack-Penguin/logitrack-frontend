@@ -48,6 +48,14 @@ describe('sessionStore', () => {
     expect(sessionStore.get()).toBeNull();
     expect(sessionStorage.getItem(KEY)).toBeNull();
   });
+
+  it('copia el DNI del cliente si el token lo trae', () => {
+    sessionStore.set(crearToken({ roles: ['CLIENTE'], dni: '30111222' }));
+    expect(sessionStore.get()?.dni).toBe('30111222');
+
+    sessionStore.set(crearToken({ roles: ['ADMIN'] }));
+    expect(sessionStore.get()).not.toHaveProperty('dni');
+  });
 });
 
 describe('sessionStore al iniciar (recarga de la página)', () => {

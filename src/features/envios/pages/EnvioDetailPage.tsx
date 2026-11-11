@@ -5,6 +5,7 @@ import { useAuth } from '../../../shared/auth/useAuth';
 import { Card, EmptyState, Spinner, StatusBadge } from '../../../shared/components';
 import { useToast } from '../../../shared/notifications/useToast';
 import { enviosApi } from '../api/enviosApi';
+import { dniDeRemitente } from '../clienteActual';
 import { EnvioAcciones } from '../components/EnvioAcciones';
 import {
   formatearDireccion,
@@ -13,6 +14,7 @@ import {
   puedeVerCodigoRecepcion,
 } from '../formato';
 import type { EnvioResponse, HistoricoEstadoEnvio } from '../types';
+import { esVisible, useDniCliente } from '../useDniCliente';
 import styles from './EnvioPages.module.css';
 
 // Se guarda el id de lo cargado: si no coincide con el de la URL, está cargando.
@@ -23,6 +25,7 @@ export function EnvioDetailPage() {
   const id = useParams().id ?? '';
   const toast = useToast();
   const { sesion } = useAuth();
+  const cliente = useDniCliente();
   const [envio, setEnvio] = useState<Carga<EnvioResponse | 'no-encontrado'>>(null);
   const [historial, setHistorial] = useState<Carga<HistoricoEstadoEnvio[] | 'error'>>(null);
   // Cambia después de cada acción (cancelar, cambiar estado) para volver a pedir los datos.
@@ -61,7 +64,11 @@ export function EnvioDetailPage() {
 
   if (envio === null || envio.id !== id) return <Spinner />;
 
-  if (envio.valor === 'no-encontrado') {
+  // El envío de otro cliente se muestra igual que uno inexistente: no se revela que existe.
+  if (
+    envio.valor === 'no-encontrado' ||
+    !esVisible(cliente, dniDeRemitente(envio.valor.remitente))
+  ) {
     return (
       <EmptyState
         message="Envío no encontrado."
