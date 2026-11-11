@@ -32,7 +32,11 @@ function renderComo(rol: Rol, ruta: string) {
     tienePermiso: (p) => rolesTienenPermiso([rol], p),
   };
   const router = createMemoryRouter(
-    [...repartidoresRoutes, { path: '/sin-permiso', element: <p>Sin permiso</p> }],
+    [
+      ...repartidoresRoutes,
+      { path: '/sin-permiso', element: <p>Sin permiso</p> },
+      { path: '/usuarios/nuevo', element: <p>Alta unificada</p> },
+    ],
     { initialEntries: [ruta] },
   );
   return render(
@@ -110,6 +114,18 @@ describe('RepartidorDetailPage', () => {
 });
 
 describe('rutas de gestión', () => {
+  it('"Nuevo repartidor" lleva al alta unificada de /usuarios/nuevo (LT4-40)', async () => {
+    vi.spyOn(repartidoresApi, 'listar').mockResolvedValue([]);
+    renderComo('ADMIN', '/repartidores');
+    await userEvent.click(await screen.findByRole('button', { name: /nuevo repartidor/i }));
+    expect(await screen.findByText('Alta unificada')).toBeInTheDocument();
+  });
+
+  it('ADMIN que entra a /repartidores/nuevo va al alta unificada', async () => {
+    renderComo('ADMIN', '/repartidores/nuevo');
+    expect(await screen.findByText('Alta unificada')).toBeInTheDocument();
+  });
+
   it('REPARTIDOR que entra a /repartidores/nuevo va a sin-permiso', async () => {
     renderComo('REPARTIDOR', '/repartidores/nuevo');
     expect(await screen.findByText('Sin permiso')).toBeInTheDocument();

@@ -47,7 +47,7 @@ export function RepartidorListPage() {
       <header className={styles.encabezado}>
         <h1>Repartidores</h1>
         <Can permiso="repartidores.gestionar">
-          <Button icon={<IconPlus />} onClick={() => navigate('/repartidores/nuevo')}>
+          <Button icon={<IconPlus />} onClick={() => navigate('/usuarios/nuevo')}>
             Nuevo repartidor
           </Button>
         </Can>
