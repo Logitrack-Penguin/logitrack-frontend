@@ -45,11 +45,11 @@ export function puedeVerCodigoRecepcion(roles: readonly Rol[]): boolean {
 
 /**
  * Un REPARTIDOR solo ve los envíos asignados a él: los pendientes de asignación tampoco, porque no
- * puede asignárselos. Convención: el username de un usuario REPARTIDOR es su DNI. Solo oculta en la UI: el backend todavía devuelve
- * todos los envíos. Si además tiene ADMIN o CLIENTE, gana el rol más amplio.
+ * puede asignárselos. Se compara con el DNI de su ficha, que viaja en el token (claim "dni"); sin
+ * DNI no ve ninguno. Al CLIENTE lo filtra esVisible (useDniCliente) y ADMIN ve todo.
  */
 export function puedeVerEnvio(envio: EnvioResponse, sesion: Sesion | null): boolean {
   if (!sesion) return false;
   if (sesion.roles.includes('ADMIN') || sesion.roles.includes('CLIENTE')) return true;
-  return envio.repartidorAsignado === `DNI: ${sesion.username}`;
+  return sesion.dni !== undefined && envio.repartidorAsignado === `DNI: ${sesion.dni}`;
 }

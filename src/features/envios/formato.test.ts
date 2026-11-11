@@ -60,19 +60,20 @@ describe('puedeVerCodigoRecepcion', () => {
 });
 
 describe('puedeVerEnvio', () => {
-  const sesion = (username: string, ...roles: Rol[]): Sesion => ({
+  const sesion = (dni: string | undefined, ...roles: Rol[]): Sesion => ({
     token: 't',
     userId: 'u',
-    username,
+    username: 'usuario',
     roles,
     exp: 0,
+    ...(dni !== undefined && { dni }),
   });
   const ajeno = (estadoEnvio: EstadoEnvio) =>
     envioDePrueba({ estadoEnvio, repartidorAsignado: 'DNI: 30222333' });
 
   it('ADMIN y CLIENTE ven cualquier envío', () => {
-    expect(puedeVerEnvio(ajeno('EN_RUTA'), sesion('admin', 'ADMIN'))).toBe(true);
-    expect(puedeVerEnvio(ajeno('EN_RUTA'), sesion('cliente', 'CLIENTE'))).toBe(true);
+    expect(puedeVerEnvio(ajeno('EN_RUTA'), sesion(undefined, 'ADMIN'))).toBe(true);
+    expect(puedeVerEnvio(ajeno('EN_RUTA'), sesion(undefined, 'CLIENTE'))).toBe(true);
   });
 
   it('REPARTIDOR no ve los pendientes de asignación', () => {
@@ -93,6 +94,11 @@ describe('puedeVerEnvio', () => {
       expect(puedeVerEnvio(ajeno(estado), sesion('28111222', 'REPARTIDOR'))).toBe(false);
     },
   );
+
+  it('REPARTIDOR sin DNI en el token no ve ningún envío', () => {
+    const propio = envioDePrueba({ estadoEnvio: 'EN_RUTA', repartidorAsignado: 'DNI: 28111222' });
+    expect(puedeVerEnvio(propio, sesion(undefined, 'REPARTIDOR'))).toBe(false);
+  });
 
   it('sin sesión no se ve nada', () => {
     expect(puedeVerEnvio(envioDePrueba(), null)).toBe(false);

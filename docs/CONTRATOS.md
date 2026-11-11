@@ -131,9 +131,9 @@ Si una feature necesita un permiso nuevo, se agrega con un PR a `permissions.ts`
 **Envíos visibles para un REPARTIDOR.** Un REPARTIDOR solo ve los envíos asignados a él
 (`puedeVerEnvio` en `features/envios/formato.ts`). Los pendientes de asignación tampoco los ve,
 porque no puede asignárselos. Se aplica en el listado, en el detalle y en el seguimiento. Un envío
-que no ve se muestra como "no encontrado". Convención: **el username de un usuario REPARTIDOR es
-su DNI**, que se compara con `repartidorAsignado` (`"DNI: <dni>"`). Por ahora solo se oculta en la
-UI y el backend todavía devuelve todos los envíos.
+que no ve se muestra como "no encontrado". Se compara `Sesion.dni` (el DNI de su ficha, que carga el
+alta unificada, LT4-40) con `repartidorAsignado` (`"DNI: <dni>"`). Un REPARTIDOR sin DNI no ve
+ningún envío. shipment-service aplica la misma regla con `X-User-Dni` (404 para un envío ajeno).
 
 ```tsx
 // shared/guards/RequireAuth.tsx, RequireRole.tsx, Can.tsx
