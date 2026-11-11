@@ -64,6 +64,7 @@ export interface Sesion {
   username: string;
   roles: Rol[];
   exp: number;
+  dni?: string; // claim "dni": solo CLIENTE registrado con sus datos de cliente
 }
 export function useAuth(): {
   sesion: Sesion | null;
@@ -219,6 +220,12 @@ export interface RegistroRequest {
   password: string; // 8 a 72 caracteres (BCrypt solo usa 72 bytes)
   email: string; // formato email, hasta 100 caracteres
   roles?: Rol[]; // si no se manda, el backend asigna CLIENTE
+  // Obligatorios si la cuenta es CLIENTE: security-service crea el cliente en shipment-service
+  // (o lo vincula si ya existe con el mismo email) y guarda el DNI en el usuario y en el token.
+  dni?: string; // 8 dígitos
+  nombre?: string; // solo letras, 3 a 30
+  apellido?: string; // solo letras
+  telefono?: string; // 10 dígitos
 }
 
 // Respuesta de POST /auth/register (201), GET /auth/me y GET /users (solo ADMIN)
@@ -227,6 +234,7 @@ export interface UserResponse {
   username: string;
   email: string;
   roles: Rol[]; // en Java es un Set: el orden no está garantizado
+  dni?: string | null; // DNI del cliente vinculado; null si no es cliente
 }
 ```
 
@@ -242,6 +250,8 @@ usuariosApi.listar(): Promise<UserResponse[]>;
 | 400    | Datos inválidos. `message` trae `"campo: motivo; …"` (sin `detalles`) |
 | 403    | Pedir un rol privilegiado sin token de ADMIN                          |
 | 409    | Username o email ya existentes                                        |
+| 409    | El DNI ya tiene cuenta, o es de un cliente con otro email             |
+| 503    | shipment-service no respondió al crear el cliente (no se crea cuenta) |
 
 Rutas: `/registro` (pública), `/perfil` (cualquier usuario logueado), `/usuarios` y `/usuarios/nuevo`
 (permiso `usuarios.gestionar`). Después de registrarse, `/registro` navega a `/login` con

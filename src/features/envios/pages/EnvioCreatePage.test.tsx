@@ -3,7 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider, useParams } from 'react-router';
 import { ApiError } from '../../../shared/api/apiError';
 import { enviosApi } from '../api/enviosApi';
-import { envioDePrueba } from '../test/datos';
+import { sessionStore } from '../../../shared/auth/sessionStore';
+import {
+  DNI_DE_PRUEBA,
+  envioDePrueba,
+  iniciarSesionComo,
+  vincularDniDePrueba,
+} from '../test/datos';
 import { EnvioCreatePage } from './EnvioCreatePage';
 import { Proveedores } from '../test/Proveedores';
 
@@ -57,6 +63,7 @@ const crearEnvio = () => screen.getByRole('button', { name: 'Crear envío' });
 describe('EnvioCreatePage', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    sessionStore.clear();
   });
 
   it('con el formulario vacío muestra los errores y no llama al backend', async () => {
@@ -111,7 +118,9 @@ describe('EnvioCreatePage', () => {
     expect(
       await screen.findByText(/Envío TRK-1A2B3C4D creado\. Tarifa: \$\s?1\.500,00\./),
     ).toBeInTheDocument();
-    expect(screen.getByText('Detalle de 3f2b8c1e-0000-4000-8000-000000000001')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Detalle de 3f2b8c1e-0000-4000-8000-000000000001'),
+    ).toBeInTheDocument();
   });
 
   it('un DNI sin cliente muestra el mensaje del backend', async () => {
@@ -142,5 +151,21 @@ describe('EnvioCreatePage', () => {
 
     expect(await screen.findByText('El DNI solo puede contener números.')).toBeInTheDocument();
     expect(input('dniCliente')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('un CLIENTE crea a su nombre: su DNI viene cargado y no se puede cambiar', async () => {
+    iniciarSesionComo('CLIENTE');
+    vincularDniDePrueba();
+    const crear = vi.spyOn(enviosApi, 'crear').mockResolvedValue(envioDePrueba());
+    const user = userEvent.setup();
+    renderizar();
+
+    expect(input('dniCliente')).toHaveValue(DNI_DE_PRUEBA);
+    expect(input('dniCliente')).toHaveAttribute('readonly');
+
+    completar('38987654'); // aunque se fuerce otro DNI, se manda el suyo
+    await user.click(crearEnvio());
+
+    expect(crear).toHaveBeenCalledWith(expect.objectContaining({ dniCliente: DNI_DE_PRUEBA }));
   });
 });

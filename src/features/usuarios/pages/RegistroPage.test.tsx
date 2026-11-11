@@ -32,6 +32,10 @@ async function completarYEnviar() {
   await user.type(screen.getByLabelText('Email'), 'juan@mail.com');
   await user.type(screen.getByLabelText('Contraseña'), '12345678');
   await user.type(screen.getByLabelText('Repetir contraseña'), '12345678');
+  await user.type(screen.getByLabelText('DNI'), '30111222');
+  await user.type(screen.getByLabelText('Nombre'), 'Juan');
+  await user.type(screen.getByLabelText('Apellido'), 'Pérez');
+  await user.type(screen.getByLabelText('Teléfono'), '3881234567');
   await user.click(screen.getByRole('button', { name: 'Crear cuenta' }));
 }
 
@@ -55,6 +59,10 @@ describe('RegistroPage', () => {
       username: 'juan',
       email: 'juan@mail.com',
       password: '12345678',
+      dni: '30111222',
+      nombre: 'Juan',
+      apellido: 'Pérez',
+      telefono: '3881234567',
     });
     expect(await screen.findByText('Login de juan')).toBeInTheDocument();
     expect(screen.getByText('Cuenta creada, ya podés ingresar.')).toBeInTheDocument();

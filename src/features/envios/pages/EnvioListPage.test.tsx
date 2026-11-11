@@ -4,7 +4,7 @@ import { createMemoryRouter, RouterProvider, useParams } from 'react-router';
 import { ApiError } from '../../../shared/api/apiError';
 import { sessionStore } from '../../../shared/auth/sessionStore';
 import { enviosApi } from '../api/enviosApi';
-import { envioDePrueba, iniciarSesionComo } from '../test/datos';
+import { envioDePrueba, iniciarSesionComo, vincularDniDePrueba } from '../test/datos';
 import { Proveedores } from '../test/Proveedores';
 import { EnvioListPage } from './EnvioListPage';
 
@@ -76,6 +76,7 @@ describe('EnvioListPage', () => {
 
   it('al hacer clic en una fila abre el detalle', async () => {
     iniciarSesionComo('CLIENTE');
+    vincularDniDePrueba();
     vi.spyOn(enviosApi, 'listar').mockResolvedValue([envioDePrueba()]);
     renderizar();
 
@@ -102,5 +103,42 @@ describe('EnvioListPage', () => {
 
     expect(await screen.findByText('Servicio caído.')).toBeInTheDocument();
     expect(screen.getByText('No hay envíos.')).toBeInTheDocument();
+  });
+
+  describe('CLIENTE', () => {
+    it('solo ve sus envíos, no los de otros clientes', async () => {
+      iniciarSesionComo('CLIENTE');
+      vincularDniDePrueba();
+      vi.spyOn(enviosApi, 'listar').mockResolvedValue([
+        envioDePrueba(),
+        envioDePrueba({
+          idEnvio: 'e-otro',
+          codigoSeguimiento: 'LT-9999',
+          remitente: 'Nombre: Gómez, María - DNI: 38987654',
+        }),
+      ]);
+      renderizar();
+
+      expect(await screen.findByText('LT-0001')).toBeInTheDocument();
+      expect(screen.queryByText('LT-9999')).not.toBeInTheDocument();
+      expect(screen.queryByText(/38987654/)).not.toBeInTheDocument();
+      expect(screen.getByText('1 envío')).toBeInTheDocument();
+    });
+
+    it.each(['ADMIN', 'REPARTIDOR'] as const)('%s sigue viendo todos', async (rol) => {
+      iniciarSesionComo(rol);
+      vi.spyOn(enviosApi, 'listar').mockResolvedValue([
+        envioDePrueba(),
+        envioDePrueba({
+          idEnvio: 'e-otro',
+          codigoSeguimiento: 'LT-9999',
+          remitente: 'Nombre: Gómez, María - DNI: 38987654',
+        }),
+      ]);
+      renderizar();
+
+      expect(await screen.findByText('LT-9999')).toBeInTheDocument();
+      expect(screen.getByText('LT-0001')).toBeInTheDocument();
+    });
   });
 });
