@@ -36,7 +36,8 @@
 
 .secciones {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  align-items: start;
   gap: var(--space-5);
 }
 
@@ -47,7 +48,7 @@
 
 .datos {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  grid-template-columns: minmax(120px, max-content) 1fr;
   gap: var(--space-3) var(--space-5);
   margin: 0;
 }
@@ -59,7 +60,7 @@
 
 .datos dd {
   margin: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .historial {

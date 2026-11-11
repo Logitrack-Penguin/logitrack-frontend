@@ -11,19 +11,20 @@ import { NavBar } from './NavBar';
 vi.mock('../../../app/navigation', () => ({
   NAV_ITEMS: [
     { label: 'Envíos', to: '/envios', permiso: 'envios.ver' },
+    { label: 'Seguimiento', to: '/envios/seguimiento', permiso: 'envios.ver' },
     { label: 'Clientes', to: '/clientes', permiso: 'clientes.gestionar' },
     { label: 'Mi perfil', to: '/perfil' },
   ],
 }));
 
-function renderComo(rol: Rol) {
+function renderComo(rol: Rol, ruta = '/envios') {
   sessionStore.set(crearToken({ sub: `usuario_${rol.toLowerCase()}`, roles: [rol] }));
   const router = createMemoryRouter(
     [
-      { path: '/envios', element: <NavBar /> },
       { path: '/login', element: <p>Login</p> },
+      { path: '*', element: <NavBar /> },
     ],
-    { initialEntries: ['/envios'] },
+    { initialEntries: [ruta] },
   );
   render(
     <AuthProvider>
@@ -43,18 +44,33 @@ beforeEach(() => {
 describe('NavBar', () => {
   it('ADMIN ve todos los ítems', () => {
     renderComo('ADMIN');
-    expect(etiquetas()).toEqual(['Envíos', 'Clientes', 'Mi perfil']);
+    expect(etiquetas()).toEqual(['Envíos', 'Seguimiento', 'Clientes', 'Mi perfil']);
   });
 
   it('CLIENTE no ve los ítems para los que no tiene permiso', () => {
     renderComo('CLIENTE');
-    expect(etiquetas()).toEqual(['Envíos', 'Mi perfil']);
+    expect(etiquetas()).toEqual(['Envíos', 'Seguimiento', 'Mi perfil']);
   });
 
   it('marca el ítem activo', () => {
     renderComo('ADMIN');
     expect(screen.getByRole('link', { name: 'Envíos' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Clientes' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('en una subruta con ítem propio marca solo ese ítem', () => {
+    renderComo('ADMIN', '/envios/seguimiento');
+    expect(screen.getByRole('link', { name: 'Seguimiento' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    expect(screen.getByRole('link', { name: 'Envíos' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('en una subruta sin ítem propio marca el ítem padre', () => {
+    renderComo('ADMIN', '/envios/123');
+    expect(screen.getByRole('link', { name: 'Envíos' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Seguimiento' })).not.toHaveAttribute('aria-current');
   });
 
   it('muestra el usuario y sus roles', () => {
