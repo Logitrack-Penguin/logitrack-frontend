@@ -130,3 +130,13 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* Páginas de un solo formulario o ficha: título y tarjeta centrados en la pantalla. */
+.centrada {
+  align-items: center;
+}
+
+.centrada > * {
+  width: 100%;
+  max-width: 520px;
+}

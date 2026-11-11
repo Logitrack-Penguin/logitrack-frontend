@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { crearToken } from '../../../test/jwt';
@@ -34,7 +34,10 @@ function renderComo(rol: Rol, ruta = '/envios') {
   return router;
 }
 
-const etiquetas = () => screen.getAllByRole('link').map((a) => a.textContent);
+const etiquetas = () =>
+  within(screen.getByRole('navigation', { name: 'Menú principal' }))
+    .getAllByRole('link')
+    .map((a) => a.textContent);
 
 beforeEach(() => {
   sessionStore.clear();
@@ -76,14 +79,41 @@ describe('NavBar', () => {
   it('muestra el usuario y sus roles', () => {
     renderComo('CLIENTE');
     expect(screen.getByText('usuario_cliente')).toBeInTheDocument();
-    expect(screen.getByText('CLIENTE')).toBeInTheDocument();
+    expect(screen.getByText('Cliente')).toBeInTheDocument();
   });
 
-  it('"Salir" vuelve al login y vacía sessionStorage', async () => {
+  it('el logo lleva a /envios', () => {
+    renderComo('ADMIN', '/clientes');
+    expect(screen.getByRole('link', { name: 'LogiTrack, ir a envíos' })).toHaveAttribute(
+      'href',
+      '/envios',
+    );
+  });
+
+  it('el botón de menú abre y cierra el desplegable', async () => {
+    const user = userEvent.setup();
+    renderComo('ADMIN');
+    const boton = screen.getByRole('button', { name: 'Abrir menú' });
+    expect(boton).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(boton);
+    expect(screen.getByRole('button', { name: 'Cerrar menú' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+
+    await user.click(screen.getByRole('link', { name: 'Clientes' }));
+    expect(screen.getByRole('button', { name: 'Abrir menú' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+  });
+
+  it('"Cerrar sesión" vuelve al login y vacía sessionStorage', async () => {
     const router = renderComo('ADMIN');
     expect(sessionStorage.length).toBe(1);
 
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Salir' }));
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Cerrar sesión' }));
 
     expect(await screen.findByText('Login')).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/login');

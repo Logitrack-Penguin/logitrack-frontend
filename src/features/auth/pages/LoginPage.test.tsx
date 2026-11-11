@@ -97,6 +97,25 @@ describe('LoginPage', () => {
     });
   });
 
+  it('el ojito muestra y oculta la contraseña', async () => {
+    const user = userEvent.setup();
+    renderLogin();
+    const clave = screen.getByLabelText('Contraseña');
+    expect(clave).toHaveAttribute('type', 'password');
+
+    await user.click(screen.getByRole('button', { name: 'Mostrar contraseña' }));
+    expect(clave).toHaveAttribute('type', 'text');
+
+    await user.click(screen.getByRole('button', { name: 'Ocultar contraseña' }));
+    expect(clave).toHaveAttribute('type', 'password');
+  });
+
+  it('muestra el logo y el título', () => {
+    renderLogin();
+    expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument();
+    expect(screen.getByText('Tus envíos, siempre en camino.')).toBeInTheDocument();
+  });
+
   it('avisa si la sesión expiró', () => {
     renderLogin({ motivo: 'expirada' });
     expect(screen.getByText('Tu sesión expiró. Volvé a ingresar.')).toBeInTheDocument();

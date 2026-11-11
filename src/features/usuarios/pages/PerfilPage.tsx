@@ -31,7 +31,7 @@ export function PerfilPage() {
   }, [toast]);
 
   return (
-    <section className={styles.pagina}>
+    <section className={`${styles.pagina} ${styles.centrada}`}>
       <header className={styles.encabezado}>
         <h1 className={styles.titulo}>Mi perfil</h1>
       </header>
