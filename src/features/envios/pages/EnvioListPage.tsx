@@ -13,8 +13,10 @@ import {
 import { Can } from '../../../shared/guards/Can';
 import { useToast } from '../../../shared/notifications/useToast';
 import { enviosApi } from '../api/enviosApi';
+import { dniDeRemitente } from '../clienteActual';
 import { ESTADOS_ENVIO, formatearFecha, formatearTarifa } from '../formato';
 import type { EnvioResponse, EstadoEnvio } from '../types';
+import { esVisible, useDniCliente } from '../useDniCliente';
 import styles from './EnvioPages.module.css';
 
 // El código de recepción no va en el listado: es el PIN del destinatario.
@@ -33,6 +35,7 @@ type Filtro = EstadoEnvio | '';
 export function EnvioListPage() {
   const navigate = useNavigate();
   const toast = useToast();
+  const cliente = useDniCliente();
   const [estado, setEstado] = useState<Filtro>('');
   // Se guarda con qué filtro se cargó: si no coincide con el actual, está cargando.
   const [datos, setDatos] = useState<{ estado: Filtro; envios: EnvioResponse[] } | null>(null);
@@ -57,6 +60,10 @@ export function EnvioListPage() {
 
   const isLoading = datos === null || datos.estado !== estado;
   const textoEstado = ESTADOS_ENVIO.find((o) => o.value === estado)?.label.toLowerCase();
+  // Un CLIENTE solo ve sus envíos: el backend devuelve todos, se filtra por el DNI del remitente.
+  const envios = (datos?.envios ?? []).filter((e) =>
+    esVisible(cliente, dniDeRemitente(e.remitente)),
+  );
 
   return (
     <section className={styles.pagina}>
@@ -84,21 +91,34 @@ export function EnvioListPage() {
             </option>
           ))}
         </select>
+        {cliente.debeFiltrar && (
+          <span className={styles.mensaje}>
+            Tus envíos (DNI {cliente.dni})
+            {cliente.puedeCambiarDni && (
+              <>
+                {' · '}
+                <button type="button" className={styles.link} onClick={cliente.desvincular}>
+                  Cambiar DNI
+                </button>
+              </>
+            )}
+          </span>
+        )}
       </div>
 
       {isLoading ? (
         <Spinner />
-      ) : datos.envios.length === 0 ? (
+      ) : envios.length === 0 ? (
         <EmptyState
           message={textoEstado ? `No hay envíos en estado ${textoEstado}.` : 'No hay envíos.'}
         />
       ) : (
         <DataTable
           columns={COLUMNAS}
-          rows={datos.envios}
+          rows={envios}
           getRowKey={(e) => e.idEnvio}
           onRowClick={(e) => navigate(`/envios/${e.idEnvio}`)}
-          footer={`${datos.envios.length} ${datos.envios.length === 1 ? 'envío' : 'envíos'}`}
+          footer={`${envios.length} ${envios.length === 1 ? 'envío' : 'envíos'}`}
         />
       )}
     </section>
